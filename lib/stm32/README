@@ -1,0 +1,23 @@
+. HUL_GPIO_CLK_Enable(GPIO_TypeDef *)
+
+. ADC_SAMPLE_0 , ADC_SAMPLE_1, ... mcu마다 정의된값이 다르다. 굳이 sampling값에 맞추려 말고 논리적인 정의
+
+. HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0);            ADC1_IRQn, or get_adc_irqn(ADC1) 
+  HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
+
+
+  //_ha.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+  //_ha.Init.Resolution = ADC_RESOLUTION_12B;
+  //_ha.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  _ha.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  _ha.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  _ha.Init.NbrOfConversion = chs;                   // <> _channel_nr
+  //_ha.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  _ha.Init.DiscontinuousConvMode = DISABLE;
+  _ha.Init.ScanConvMode = ENABLE;
+  _ha.Init.ContinuousConvMode = ENABLE;
+
+// multi, continues, use dma
+  if( _mode == eADC_DMA || _mode == eADC_DMAINTERRUPT ) {
+    //_ha.Init.DMAContinuousRequests = ENABLE;
+ 
