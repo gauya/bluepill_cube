@@ -18,7 +18,7 @@
 #include "gtick.h"
 #include "gutils.h"
 #include "gprintf.h"
-#include "gserial_hal.h"
+#include "gserial.h"
 
 int add_proc(const char*pn, void (*f)(const char*), int timer=-1, int act=1);
 
@@ -26,7 +26,7 @@ int add_proc(const char*pn, void (*f)(const char*), int timer=-1, int act=1);
 extern "C" {
 #endif
 
-//void command_list(const char*str);
+void command_list(const char*str);
 //void scadule_traffic(const char*);
 void system_reset(const char *s);
 

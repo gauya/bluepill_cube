@@ -71,6 +71,11 @@ public:
 	void attach( void (*extif)(uint16_t));
 	void detach();
 
+// debugging
+	GPIO_TypeDef *PORT() { return this->port; }
+	uint16_t mask() { return _mask; }
+	int PIN() { this->pin; }
+
 // operator
 	ggpio &operator=(gpio_t&);
 };

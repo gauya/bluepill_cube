@@ -1,5 +1,5 @@
 /*
- * pfns.c
+ * gproc.cpp
  *
  *  Created on: 2021. 12. 7.
  *      Author: seu
@@ -304,13 +304,15 @@ void scadule() {
 
 	while(1) {
 		__srun = get_utime();
+
 		scadule_pre();
 
 		__runs = run();
 
+		scadule_post();
+
 		__erun = get_utime();
 		__dur = dif_u32(__srun,__erun);
-		scadule_post();
 
 		iwdg_clear();
 	}

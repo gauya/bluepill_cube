@@ -5,7 +5,7 @@
  *      Author: seu
  */
 
-#include "gserial_hal.h"
+#include "gserial.h"
 #include <stdarg.h>
 
 serial_info_t __gsi[MAX_SERIAL_NUM] = {0,};
@@ -121,7 +121,7 @@ int init_serial(UART_HandleTypeDef *phuart) {
 	return id;
 }
 
-serial_info_t* _get_serial(int id) {
+serial_info_t* _get_serial_byid(int id) {
 	if((uint32_t)id < MAX_SERIAL_NUM) {
 		return (serial_info_t*)(&__gsi[id]);
 	}
@@ -194,12 +194,12 @@ int uputc(int ch) {
 }
 
 int uart_getc() {
-	serial_info_t*s = _get_serial( _default_uart_id );
+	serial_info_t*s = _get_serial_byid( _default_uart_id );
 	return fifo_getc(s->_rx_buf);
 }
 
 int uart_putc( int ch ) {
-	serial_info_t*s = _get_serial( _default_uart_id );
+	serial_info_t*s = _get_serial_byid( _default_uart_id );
 	if( HAL_UART_Transmit(s->Handle, (uint8_t*)&ch,1,HAL_MAX_DELAY) != HAL_OK)
 		return -1;
 
@@ -214,7 +214,7 @@ int cdc_getc() {
 }
 
 int cdc_putc(int ch) {
-	serial_info_t*s = _get_serial( _default_cdc_id );
+	serial_info_t*s = _get_serial_byid( _default_cdc_id );
 	int to_cnt=0;
 
 	while( CDC_Transmit_FS((uint8_t*)&s->_tx_ch, 1) == USBD_BUSY) {
@@ -223,7 +223,7 @@ int cdc_putc(int ch) {
 }
 
 int ggetc(int fd) {
-	serial_info_t*s = _get_serial(fd);
+	serial_info_t*s = _get_serial_byid(fd);
 	if(s && s->_inited) {
 #if 0
 		return fifo_getc(s->_rx_buf);
@@ -239,7 +239,7 @@ int ggetc(int fd) {
 }
 
 int gputc(int ch,int fd) {
-	serial_info_t*s = _get_serial(fd);
+	serial_info_t*s = _get_serial_byid(fd);
 	if(s && s->_inited) {
 		if(s->_type == 0) {
 			s->_tx_ch = ch;
@@ -253,7 +253,7 @@ int gputc(int ch,int fd) {
 }
 
 int gputs(const char* str,int fd) {
-	serial_info_t*s = _get_serial(fd);
+	serial_info_t*s = _get_serial_byid(fd);
 	if(s && s->_inited) {
 		if(s->_type == 0) {
 			if( HAL_UART_Transmit(get_console()->Handle, (uint8_t*)str,strlen(str),HAL_MAX_DELAY) != HAL_OK)
@@ -271,7 +271,7 @@ int gputs(const char* str,int fd) {
 }
 
 int gwrite(uint8_t *data, uint16_t len,int fd) {
-	serial_info_t*s = _get_serial(fd);
+	serial_info_t*s = _get_serial_byid(fd);
 	if(s && s->_inited) {
 		if(s->_type == 0) {
 			if( HAL_UART_Transmit(get_console()->Handle, data,len,HAL_MAX_DELAY) != HAL_OK)

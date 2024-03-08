@@ -9,7 +9,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include "gserial_hal.h"
+#include "gserial.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,6 +56,22 @@ void gdebug(int lev, const char* fmt, ...) {
 	gputs(buf);
 	return;
 }
+
+void error_occur( const char *msg, char *file, int line) {
+	gdebug(0, "[%s:%d] %s\n", file, line,msg);
+}
+
+#include <time.h>
+void error_log( const char *msg, char *file, int line) {
+	time_t now;
+	char buf[24];
+
+	time(&now);
+	strftime(buf, 23, "%Y-%m-%d %H:%M:%S", localtime(&now));
+
+	gdebug(0, "[%s %s:%d] %s\n", buf, file, line, msg);
+}
+
 
 #endif
 

@@ -1,4 +1,5 @@
 #include <ggpio.h>
+#include <glog.h>
 
 #if 0
 
@@ -153,18 +154,25 @@ void HAL_GPIO_EXTI15_10_IRQHandler(void) {
 
 ggpio::ggpio(GPIO_TypeDef *g, int pin, uint32_t mode, int pullup, int speed) {
     this->port = g;
-    this->_mask = ( pin >= 0 && pin <=15 )? (1 << pin) : 0;
+    if( pin >= 0 && pin <=15 ) {
+        this->pin = pin;
+        this->_mask = (1 << pin );
+    } else {
+        this->pin = -1;
+        this->_mask = 0;
+    }
 
     _flag = 0;
     _mode = mode;
     _speed = (speed == 0 || speed == 1 || speed == 3)? speed : 2 ;
     _pullup = (pullup == 1 || pullup == 2)? pullup: 0;
 
-    // init();
+    //init();
 }
 
 ggpio::ggpio() {
     this->port = 0;
+    this->pin = -1;
     this->_mask = 0;
     _flag = 0;
 }
@@ -183,7 +191,13 @@ ggpio::~ggpio() {
 
 void ggpio::init(GPIO_TypeDef *g, int pin, uint32_t mode, int pullup, int speed) {
     this->port = g;
-    this->_mask = ( pin >= 0 && pin <=15 )? (1 << pin) : 0;
+    if( pin >= 0 && pin <=15 ) {
+        this->pin = pin;
+        this->_mask = (1 << pin );
+    } else {
+        this->pin = -1;
+        this->_mask = 0;
+    }
 
     _flag = 0;
     _mode = mode;
@@ -210,7 +224,7 @@ void ggpio::init() {
     uint32_t mode = 0;
     switch(_mode) {
         case eGPIO_OUTPP:
-            mode =  GPIO_MODE_OUTPUT_PP;
+            mode = GPIO_MODE_OUTPUT_PP;
             break;
         case eGPIO_OUTOD:
             mode = GPIO_MODE_OUTPUT_OD;
@@ -233,10 +247,10 @@ void ggpio::init() {
         default:;
     }
 
-    gi.Pin = this->_mask;
-    gi.Mode = mode;
-    gi.Speed = _speed;
-    gi.Pull = _pullup;
+    gi.Pin   = (uint32_t)this->_mask;
+    gi.Mode  = (uint32_t)mode;
+    gi.Speed = (uint32_t)_speed;
+    gi.Pull  = (uint32_t)_pullup;
 
     HAL_GPIO_Init( this->port, &gi );
 
@@ -276,9 +290,9 @@ int ggpio::write( int val ) {
     this->port->ODR = v;
 #else
     if( val ) {
-        this->port->ODR |= _mask; 
+        this->port->BSRR = _mask; 
     } else {
-        this->port->ODR &= ~_mask;
+        this->port->BRR = _mask;
     }
 #endif
     return (val)? 1 : 0;
@@ -293,9 +307,14 @@ void ggpio::low() {
 }
 
 void ggpio::toggle() {
-    if( ! isinit() || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) return;
-    
-    this->port->ODR ^= ~_mask;
+    if( ! isinit() || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) {
+        return;
+    }
+    if( this->port->ODR & _mask ) {
+        this->port->BRR = _mask; 
+    } else {
+        this->port->BSRR = _mask; 
+    }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

@@ -4,7 +4,9 @@ extern "C" {
 
 #include <giwdg.h>
 #include <stm32f1xx_hal.h>
+#include <stm32f1xx_ll_iwdg.h>
 #include "main.h"
+#include "glog.h"
 
 IWDG_HandleTypeDef hiwdg;
 
@@ -14,7 +16,7 @@ void iwdg_init(int rl) {
   hiwdg.Init.Reload = 4095;
   if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
   {
-    Error_Handler();
+    ERROR_OCR(""); //Error_Handler();
   }
 
 #if 0 //LL_DRIVER
@@ -37,7 +39,7 @@ void iwdg_clear() {
 }
 
 void iwdg_set(uint16_t ms) {
-  //LL_IWDG_SetReloadCounter(IWDG, ms); // WRITE_REG(IWDGx->RLR, IWDG_RLR_RL & Counter);
+  LL_IWDG_SetReloadCounter(IWDG, ms); // WRITE_REG(IWDGx->RLR, IWDG_RLR_RL & Counter);
 }
 
 #ifdef __cplusplus

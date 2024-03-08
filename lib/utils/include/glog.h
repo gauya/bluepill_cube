@@ -10,7 +10,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <gserial_hal.h>
+#include <gserial.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,6 +18,12 @@ extern "C" {
 
 extern int log_level;
 void gdebug(int lev, const char* fmt, ...);
+
+#define ERROR_OCR(str) error_occur(str, __FILE__, __LINE__) 
+#define ERROR_LOG(str) error_log(str, __FILE__, __LINE__) 
+
+void error_occur( const char *msg, char *file, int line );
+void error_log( const char *msg, char *file, int line );
 
 int __io_putchar(int ch);
 int __io_getchar(void);

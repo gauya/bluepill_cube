@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <assert.h>
-
+#include "gserial.h"
 #include "gprintf.h"
 
 static int __default_output = 0;
@@ -280,8 +280,6 @@ _fmt_float( _st_fmt_t *f, double value)
 	unsigned char col=0,lcol=0;
 	long ivalue = (long)value;
 	double dvalue = value - (double)ivalue;
-	
-debug(f,"FLOAT");
 
 	if(ivalue < 0) f->width -= 1;
 	if( f->width < f->max )
@@ -292,7 +290,6 @@ debug(f,"FLOAT");
 	}
 
 	lcol = _fmt_long( f,ivalue );
-debug(f,"1");
 	
 	*(f->bufp)++ = '.';
 	col = lcol + 1;
@@ -304,7 +301,6 @@ debug(f,"1");
 	f->fill = '0';
 	f->width = f->max;
 	lcol = _fmt_long(f,v);
-debug(f,"2");
 
 	return (f->sign + col + lcol);
 }
@@ -410,7 +406,7 @@ _next_tok( _st_fmt_t *f, char *tmpb )
 		return _END;  // end
 	}
 
-debug(f,"D");
+
 	f->ch = *tmpb = (char)ch;
 	tmpb[1] = '\0';
 	if( f->mode == 0 ) {
@@ -419,9 +415,9 @@ debug(f,"D");
 		else {
 			f->fmtp--;
 			char *ib = tmpb;
-debug(f,"$");
+
 			_parse_str( &f->fmtp,tmpb );
-debug(f,"%");
+
 			while( *ib ) *f->bufp++ = *ib++;
 			*f->bufp = '\0';
 			
@@ -452,30 +448,23 @@ debug(f,"%");
 typedef int (*__mode_expectf)( const char ch );
 
 __attribute__((weak))int gwputc(int ch,int where) {
+	gputc(ch);
 	return 0;
 }
 
 __attribute__((weak))int gwputs(const char *str,int where) {
 	if(where == 0) {
-		return puts(str);
+		return gputs(str);
 	}
 	int l;
 	for(l=0; *str; str++,l++) {
-		if(gwputc(*str,where) < 1) return -1;
+		if(gputc(*str) < 1) return -1;
 	}
 	return l;
 }
 
 __attribute__((weak))int gwwrite(const char *str, size_t len, int where ) {
 	return 0;
-}
-
-__attribute__((weak))int gputc(int v) {
-	return gwputc(v,__default_output);
-}
-
-__attribute__((weak))int gputs(const char *str) {
-	return gwputs(str,__default_output);
 }
 
 __attribute__((weak))int gwrite(const char *str, size_t len) {
@@ -495,11 +484,10 @@ int gvbprintf( char *buf, int sz, const char* fmt, va_list ap)
 
 	_st_init(&f,fmt,buf,sz);
 
-debug(&f,"start ");		
-	while(( type = _next_tok(&f, ibuf)) > _END ) 
-	{
+	
+	while(( type = _next_tok(&f, ibuf)) > _END ) {
 		ntype = _typeis( *(f.fmtp) );
-debug(&f,"->"); 
+
 		switch(type) {
 		case _STR:
 			_st_clear(&f);
@@ -602,7 +590,7 @@ debug(&f,"->");
 		if( err ) break;
 		ib = ibuf;
 	}
-debug(&f,"<<");	
+
 	va_end(ap);
 
 	return f.argc;
@@ -617,7 +605,7 @@ int gprintf( const char* fmt, ...)
 	int i = gvbprintf(buf, _MAX_GPBUF_SZ, fmt, ap);
 	va_end(ap);
 	
-	puts(buf);
+	gputs(buf);
 	return i;
 }
 
@@ -626,7 +614,7 @@ int gvprintf( const char* fmt, va_list ap)
 	char buf[_MAX_GPBUF_SZ+1];
 
 	int re = gvbprintf(buf,_MAX_GPBUF_SZ,fmt,ap);
-	puts(buf);
+	gputs(buf);
 
 	return re;
 }

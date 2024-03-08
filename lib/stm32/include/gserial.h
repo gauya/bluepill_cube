@@ -10,10 +10,11 @@
 
 #include "app.h"
 #include "gfifo.h"
-//#include "guart_hal.h"
 #include "usbd_cdc_if.h"
 
 #define GDEBUG_BUFLEN	256
+#define MAX_SERIAL_NUM	6
+
 /////////////////////////////////////////////////////////////////////
 
 typedef struct {
@@ -47,11 +48,8 @@ typedef struct {
 */
 } serial_info_t;
 
-#define MAX_SERIAL_NUM	6
-
-#ifdef __cplusplus
-serial_info_t* _get_serial(int id);
 serial_info_t* _get_serial(UART_HandleTypeDef *huart);
+serial_info_t* _get_serial_byid(int id);
 
 serial_info_t* get_console();
 
@@ -64,6 +62,7 @@ int init_uart(UART_HandleTypeDef *phuart, int fd=-1);
 int init_cdc(int id=-1);
 int init_serial(UART_HandleTypeDef *phuart);
 
+#ifdef __cplusplus
 extern "C" {
 #endif
 

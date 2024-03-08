@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <math.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -140,6 +141,96 @@ public:
 	double put( double v );
 	double set(int id,uint32_t n);
 };
+
+class gpid {
+private:
+    double kp;  // Proportional Gain
+    double ki;  // Integral Gain
+    double kd;  // Derivative Gain
+
+    double target;  // 목표치
+    double integral; // 적분
+	double derivative; 
+    double previous_error; // 이전 오차
+
+public:
+    gpid(double kp, double ki, double kd) 
+		: kp(kp), ki(ki), kd(kd), target(0.0), integral(0.0), previous_error(0.0) {}
+
+    // 목표치 설정
+    void setTarget(double targetValue) {
+        target = targetValue;
+    }
+
+    // PID 제어 계산
+    double calculate(double currentValue) {
+        double error = target - currentValue;
+        integral += error;
+        double derivative = error - previous_error;
+
+        // PID 제어 계산
+        double output = kp * error + ki * integral + kd * derivative;
+
+        // 이전 오차 업데이트
+        previous_error = error;
+
+        return output;
+    }
+
+	float Update(float error, float dt) {
+		// 누적 오차 계산
+		integral += error * dt;
+
+		// 미분 오차 계산
+		derivative = (error - previous_error) / dt;
+
+		// PID 제어 출력 계산
+		float output = kp * error + ki * integral + kd * derivative;
+
+	    // 출력 제한 ( -1.0f ~ 1.0f )
+    	output = fmax(fmin(output, 1.0f), -1.0f);
+	
+		// 이전 오차 저장
+		previous_error = error;
+
+		return output;
+	}
+
+};
+
+#if 0 // example
+
+int main() {
+  // PID 제어기 생성
+  gpid controller(1.0, 0.5, 0.1);
+
+  // 목표값 설정
+  float setpoint = 100.0;
+
+  // 시뮬레이션 시간 설정
+  float dt = 0.01;
+
+  // 시뮬레이션 루프
+  for (int i = 0; i < 1000; i++) {
+    // 현재 측정값
+    float measurement = 80.0 + 5.0 * sin(0.1 * i);
+
+    // 오차 계산
+    float error = setpoint - measurement;
+
+    // PID 제어 출력 계산
+    float output = controller.Update(error, dt);
+
+    // 제어 출력 적용 (예시: 모터 제어)
+    // ...
+
+    // 시뮬레이션 출력
+    std::cout << "Time: " << i * dt << "s, Error: " << error << ", Output: " << output << std::endl;
+  }
+
+  return 0;
+}
+#endif
 
 #else // c
 

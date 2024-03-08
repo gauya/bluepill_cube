@@ -5,7 +5,7 @@
 #define _MAX_GPBUF_SZ 128
 
 #include <stdarg.h>
-#include "gserial_hal.h"
+#include "gserial.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

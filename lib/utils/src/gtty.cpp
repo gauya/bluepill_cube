@@ -1,7 +1,7 @@
 #include <gstr.h>
 #include <glog.h>
 #include <gtty.h>
-#include "gserial_hal.h"
+#include "gserial.h"
 
 typedef enum { 
 	CMD_MODE_ECHO, 
@@ -275,7 +275,7 @@ void tty() {
 	if( c=='\r') {
 		c = '\n';
 	}
-	gputc(c);
+	//gputc(c);
 
 	int ret = 0;
 

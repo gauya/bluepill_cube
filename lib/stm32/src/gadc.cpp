@@ -1,4 +1,5 @@
 #include "gadc.h"
+#include <glog.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,9 +27,17 @@ void DMA1_Channel1_IRQHandler(void) {
 }
 #endif
 
-void Error_Handler(void);
-
+uint16_t adc_buffer[16];
 void (*_stm32adc_callback)() = 0;
+
+void HAL_DMA_TransferCpltCallback(DMA_HandleTypeDef *hdma) {
+  // 버퍼 처리 (예: 데이터 분석, 전송 등)
+}
+
+void HAL_DMA_StreamTransferCpltCallback(DMA_HandleTypeDef *hdma) {
+  // DMA 재시작 (연속 읽어오기)
+  HAL_DMA_Start_IT(hdma, (uint32_t)&ADC1->DR, (uint32_t)adc_buffer, 7);
+}
 
 int adc_completed = 0;
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
@@ -37,13 +46,21 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   if( _stm32adc_callback  ) {
     _stm32adc_callback();
   }
+
+#if 0
+  adc_data[0] = HAL_ADC_GetValue(hadc, ADC_CHANNEL_1);
+  adc_data[1] = HAL_ADC_GetValue(hadc, ADC_CHANNEL_2);
+  ...
+#endif
+
+  HAL_ADC_Start_IT(hadc);
 }
 
 #ifdef __cplusplus
 }
 #endif
 
-stm32adc::stm32adc() {
+stm32adc::stm32adc() { //LSE_STARTUP_TIMEOUT
   _ha.Instance = 0;
   _channel_nr = 0;
   _timeout = 1; // ms
@@ -140,7 +157,7 @@ int HUL_GPIO_clk_enable(GPIO_TypeDef *gpio) {
   return 0;
 }
 
-#include <glog.h>
+
 void stm32adc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
   HUL_ADC_clk_enable(_ha.Instance);
 
@@ -159,6 +176,8 @@ void stm32adc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
   _ha.Init.ScanConvMode = ENABLE;
   _ha.Init.ContinuousConvMode = ENABLE;
 
+  HUL_ADC_clk_enable(adc);
+
 // multi, continues, use dma
 #if defined(STM32F4) || defined(STM32F7)
   _ha.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
@@ -174,7 +193,7 @@ void stm32adc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
 
   if (HAL_ADC_Init(&_ha) != HAL_OK) // --> call HAL_ADC_MspInit()
   {
-    Error_Handler();
+    ERROR_OCR(""); //Error_Handler();
   }
 
   _chs = ac;
@@ -203,7 +222,7 @@ int stm32adc::add_channel(uint32_t ch,uint32_t samplerate) {
   sConfig.Rank = ++_channel_nr; // 1 ~ ,  
 
   if (HAL_ADC_ConfigChannel(&_ha, &sConfig) != HAL_OK) {
-    Error_Handler();
+    ERROR_OCR(""); //Error_Handler();
   }
 
   return  _channel_nr; // rank is auto increase sequentially
@@ -218,7 +237,7 @@ int stm32adc::add_channel(struct adc_channels *ac) {
   sConfig.SamplingTime = ac->sampling; //ADC_SAMPLETIME_3CYCLES;
   
   if (HAL_ADC_ConfigChannel(&_ha, &sConfig) != HAL_OK) {
-    Error_Handler();
+    ERROR_OCR(""); //Error_Handler();
   }
 
   if( ac->port != 0 ) { // not Vrefint, temperture, ..
@@ -249,7 +268,7 @@ void stm32adc::start() {
   if( ! isready() ) return;
 
   if(HAL_ADC_Start(&_ha) != HAL_OK) {
-    Error_Handler();
+    ERROR_OCR(""); //Error_Handler();
   }
 }
 
@@ -261,7 +280,9 @@ void stm32adc::stop() {
 
 void stm32adc::conv() {
   if( isready() ) {
-    HAL_ADC_PollForConversion(&_ha, _timeout);
+    if(HAL_ADC_PollForConversion(&_ha, _timeout) != HAL_OK) {
+      ERROR_OCR(""); //Error_Handler();
+    }
   }
 }
 
@@ -275,7 +296,7 @@ int stm32adc::read() {
     start();
     
     if(HAL_ADC_PollForConversion(&_ha, timeout) != HAL_OK) {
-      Error_Handler();
+    ERROR_OCR(""); //Error_Handler();
     }
   }
 
@@ -294,7 +315,7 @@ int stm32adc::read(uint16_t *buf) {
   int i = 0;
   for(; i < _channel_nr; i++ ) {
     if(HAL_ADC_PollForConversion(&_ha, 1) != HAL_OK) {
-      Error_Handler();
+    ERROR_OCR(""); //Error_Handler();
     }
     
     uint32_t v = HAL_ADC_GetValue(&_ha);  // get adc value
@@ -308,24 +329,44 @@ int stm32adc::read(uint16_t *buf) {
 
 /// @brief ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+void HUL_ADC_nvic(ADC_TypeDef *adc, int enable) {
+#if 0 // F1  
+  if( ADC1 == adc ) {
+    if( enable ) {
+      HAL_NVIC_SetPriority(ADC1_IRQn, 0, 0); // M4 ADC_IRQn
+      HAL_NVIC_EnableIRQ(ADC1_IRQn);
+    } else {
+      HAL_NVIC_DisableIRQ(ADC1_IRQn);
+    }
+  }
+#else 
+  if( ADC1 == adc ) {
+    if( enable ) {
+      HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0); // M4 ADC_IRQn
+      HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
+    } else {
+      HAL_NVIC_DisableIRQ(ADC1_2_IRQn);
+    }
+  }
+#endif
+}
+
 stm32adcint::stm32adcint() 
 : stm32adc() {
   _mode = eADC_INTERRUPT;
-  HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0); // M4 ADC_IRQn
-  HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
+  HUL_ADC_nvic(get_handle()->Instance, 1);
 }
 
 stm32adcint::stm32adcint(ADC_TypeDef *adc, struct adc_channels *ac, void (*intrf)()) 
 : stm32adc(adc, ac) {
   _mode = eADC_INTERRUPT;
-  HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
+  HUL_ADC_nvic(get_handle()->Instance, 1);
 }
 
 stm32adcint::~stm32adcint() {
   stop();
   
-  HAL_NVIC_DisableIRQ(ADC1_2_IRQn);
+  HUL_ADC_nvic(get_handle()->Instance, 0);
   
   detach();
 }
@@ -341,7 +382,9 @@ void stm32adcint::attach( void (*inf)()) {
 }
 
 void stm32adcint::start() {
-  HAL_ADC_Start_IT(get_handle());
+  if( HAL_ADC_Start_IT(&this->_ha) != HAL_OK ) {
+    ERROR_OCR(""); //Error_Handler();
+  }
 }
 
 void stm32adcint::stop() {
@@ -361,6 +404,8 @@ int stm32adcint::read() {
   return val;
 }
 
+// -------------------------------------------------------------------------------------------------
+
 stm32adcdma::stm32adcdma() 
 : stm32adcint() {
   _mode = eADC_DMAINTERRUPT;
@@ -375,11 +420,16 @@ stm32adcdma::stm32adcdma(ADC_TypeDef *adc, struct adc_channels *ac, void (*intrf
  DMA_HandleTypeDef hdma_adc1;
 void stm32adcdma::setup(ADC_TypeDef *adc, struct adc_channels *ac, void (*intrf)(), uint16_t *dmabuf) {
   if( !dmabuf ) {
-    _dmabuf = dmabuf = new uint16_t[channel_nr()*2];
+    _dmabuf = new uint16_t[channel_nr()*2];
   }
   hdma_adcp = 0;
 #if 1  // F1
+    HUL_ADC_clk_enable(adc);
+    __HAL_RCC_ADC1_CLK_ENABLE();
     __HAL_RCC_DMA1_CLK_ENABLE();
+
+    stm32adcint::setup(adc, ac, intrf);
+
     HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
@@ -393,12 +443,11 @@ void stm32adcdma::setup(ADC_TypeDef *adc, struct adc_channels *ac, void (*intrf)
     hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
     {
-      Error_Handler();
+      ERROR_OCR(""); //Error_Handler();
     }
 
 #else  // F4
-  //__HAL_RCC_DMA2_CLK_ENABLE();
-  __HAL_RCC_DMA1_CLK_ENABLE();
+  __HAL_RCC_DMA2_CLK_ENABLE();
   HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 
@@ -414,13 +463,13 @@ void stm32adcdma::setup(ADC_TypeDef *adc, struct adc_channels *ac, void (*intrf)
   hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
   if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
   {
-    Error_Handler();
+    ERROR_OCR(""); //Error_Handler();
   }
 
   hdma_adcp = &hdma_adc1;
 
 #endif  
-  stm32adcint::setup(adc, ac, intrf);
+
   __HAL_LINKDMA((&_ha),DMA_Handle,hdma_adc1);
 }
 
@@ -432,8 +481,14 @@ stm32adcdma::~stm32adcdma() {
 void stm32adcdma::start() {
   if( ! isready() ) return;
 
-  stm32adcint::start(); 
-  HAL_ADC_Start_DMA(get_handle(), (uint32_t*)_dmabuf, channel_nr());
+  //stm32adcint::start(); 
+  if( HAL_DMA_Start_IT(hdma_adcp, (uint32_t)&ADC1->DR, (uint32_t)_dmabuf[0],  channel_nr()) != HAL_OK ) {
+    ERROR_OCR(""); 
+  }
+ 
+  if( HAL_ADC_Start_DMA(get_handle(), (uint32_t*)_dmabuf, channel_nr()) != HAL_OK ) {
+    ERROR_OCR(""); 
+  };
 }
 
 void stm32adcdma::stop() {
@@ -599,7 +654,7 @@ DMA_HandleTypeDef hdma_adc1;
     hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
     {
-      Error_Handler();
+    ERROR_OCR(__FILE__, __LINE__); //Error_Handler();
     }
 
     __HAL_LINKDMA(_ha,DMA_Handle,hdma_adc1);

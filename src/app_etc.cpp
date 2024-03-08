@@ -31,7 +31,6 @@ void scadule_post() {
 	//
 }
 
-#if 0
 void command_list(const char*str) {
 	// ls --> void tty_inner_cmd_list()
 	// ls -f view_proc()
@@ -53,6 +52,7 @@ void command_list(const char*str) {
 	}
 }
 
+#if 0
 
 uint32_t suspicious_looptime = 1000 * 10; // 10ms
 
