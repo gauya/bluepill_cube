@@ -106,6 +106,7 @@ public:
 	int mode(int mode=-1);
 	// 0:out, 1:in, 2:x 3:adc,4:exti,5:AF(timer,uart,...)
 	int pins_nr();
+	inline bool isvalidpin(int pin) { return ( pin >= 0 && pin <= 15 && ((1 << pin) & this->mask)); }
 
 // read function
 	int read();
@@ -115,13 +116,16 @@ public:
 	void high(int pin);
 	void low(int pin);
 	void toggle(int pin);
+	
 	int write(int pin, int val);
+
+	void high();
+	void low();
+	void toggle();	
 
 // write 
 	int write(uint16_t data);
 	int write(uint32_t mask, uint16_t data);
-
-	void toggle();
 
 	void attach( void (*extif)(uint16_t));
 	void detach();

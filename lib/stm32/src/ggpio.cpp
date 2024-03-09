@@ -440,40 +440,33 @@ int gwgpio::read() {
 int gwgpio::write(uint16_t val) {
     if( ! isinit() || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) return -1;
     
-    val &= this->mask;
-    this->port->ODR = ((this->port->ODR & ~(this->mask)) | val);
+    this->port->BSRR = ( val & this->mask );
     
-    return val;
-}
-
-void gwgpio::toggle() {
-    if( ! isinit() || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) return;
-    
-    uint16_t cval = this->port->ODR & this->mask;
-    cval = ~cval & this->mask;
-    this->port->ODR = (this->port->ODR & ~(this->mask)) | cval;
+    return (val & this->mask);
 }
 
 // specific one pin
 
 int gwgpio::read(int pin) {
-    if( ! isinit() || (this->_mode != eGPIO_INPUT) ) return -1;
-    if( pin < 0 || pin < 15 ) return -1;
-    if( ( ((1 << pin) & this->mask) == 0 ) ) return -1;
-
-    return (this->port->IDR & (1 << pin))? 1 : 0;
+    if( ! isinit() || !isvalidpin(pin) ) return -1;
+    if(this->_mode == eGPIO_INPUT) {
+        return (this->port->IDR & (1 << pin))? 1 : 0;
+    } else 
+    if(this->_mode == eGPIO_ADC) {
+        // adc
+    }
 }
 
 int gwgpio::write(int pin, int val) {
-    if( ! isinit() || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) return -1;
-    if( pin < 0 || pin < 15 ) return -1;
-    if( ( ((1 << pin) & this->mask) == 0 ) ) return -1;
+    if( ! isinit() || !isvalidpin(pin) || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) return -1;
 
-    uint16_t v = this->port->ODR & ~(1<<pin);
-    if( val ) v |= (1 << pin);
-    this->port->ODR = v;
+    if( val ) {
+        this->port->BSRR = (1 << pin);
+    } else {
+        this->port->BRR = (1 << pin);
+    }
 
-    return (v)? 1 : 0;
+    return (val)? 1 : 0;
 }
 
 void gwgpio::high( int pin ) {
@@ -485,23 +478,32 @@ void gwgpio::low( int pin ) {
 }
 
 void gwgpio::toggle(int pin) {
-    if( ! isinit() || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) return;
-    if( pin < 0 || pin < 15 ) return;
-    if( ( ((1 << pin) & this->mask) == 0 ) ) return;
-#if 0
-    uint16_t v = this->gpio->ODR & (1 << pin); 
+    if( ! isinit() || !isvalidpin(pin) || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) return;
 
-    if( v ) {
-        this->port->ODR &= (uint16_t)~(1 << pin);
+    if( this->port->ODR & (1 << pin) ) {
+        this->port->BRR = (1 << pin ); 
     } else {
-        this->port->ODR |= (uint16_t)(1 << pin);
+        this->port->BSRR = (1 << pin); 
     }
-    return (v)? 1 : 0;
-#else
-    uint32_t v = 1 << pin;
-    uint32_t odr = this->port->ODR;
-    this->port->BSRR = ((odr & v) << pin) | ( ~odr & v);
-#endif    
+}
+
+void gwgpio::high() {
+    if( ! isinit() || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) return;
+    this->port->BSRR = this->mask;
+}
+
+void gwgpio::low() {
+    if( ! isinit() || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) return;
+    this->port->BRR = this->mask;
+}
+
+void gwgpio::toggle() {
+    if( ! isinit() || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) return;
+
+    uint16_t cval = this->port->ODR & this->mask;
+
+    this->port->BRR = cval;
+    this->port->BSRR = ( ~cval & this->mask );
 }
 
 #endif // __cplusplus
