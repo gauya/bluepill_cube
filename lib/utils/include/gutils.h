@@ -158,13 +158,13 @@ public:
 		: kp(kp), ki(ki), kd(kd), target(0.0), integral(0.0), previous_error(0.0) {}
 
     // 목표치 설정
-    void setTarget(double targetValue) {
-        target = targetValue;
+    void setpoint(double setpoint) {
+        target = setpoint;
     }
 
     // PID 제어 계산
-    double calculate(double currentValue) {
-        double error = target - currentValue;
+    double calculate(double current_value) {
+        double error = target - current_value;
         integral += error;
         double derivative = error - previous_error;
 
@@ -177,7 +177,7 @@ public:
         return output;
     }
 
-	float Update(float error, float dt) {
+	double Update(double error, double dt) {
 		// 누적 오차 계산
 		integral += error * dt;
 
@@ -185,7 +185,7 @@ public:
 		derivative = (error - previous_error) / dt;
 
 		// PID 제어 출력 계산
-		float output = kp * error + ki * integral + kd * derivative;
+		double output = kp * error + ki * integral + kd * derivative;
 
 	    // 출력 제한 ( -1.0f ~ 1.0f )
     	output = fmax(fmin(output, 1.0f), -1.0f);
@@ -195,7 +195,15 @@ public:
 
 		return output;
 	}
+    double compute(double current_value,double setpoint) {
+        double error = setpoint - current_value;
+        integral += error;
+        double derivative = error - previous_error;
+        previous_error = error;
 
+        double output = kp * error + ki * integral + kd * derivative;
+        return output;
+    }
 };
 
 #if 0 // example

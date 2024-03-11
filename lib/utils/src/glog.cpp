@@ -57,12 +57,12 @@ void gdebug(int lev, const char* fmt, ...) {
 	return;
 }
 
-void error_occur( const char *msg, char *file, int line) {
+void error_log( const char *msg, const char *file, int line) {
 	gdebug(0, "[%s:%d] %s\n", file, line,msg);
 }
 
 #include <time.h>
-void error_log( const char *msg, char *file, int line) {
+void error_log2( const char *msg, const char *file, int line) {
 	time_t now;
 	char buf[24];
 

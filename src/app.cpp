@@ -18,7 +18,38 @@ void loop_led() {
 
   //digitalWrite(ledPin, sw);
 
-  gdebug(2,"[%d]\n",cnt++);
+  gdebug(5,"[%d]\n",cnt++);
+}
+
+extern ADC_HandleTypeDef hadc1;
+extern DMA_HandleTypeDef hdma_adc1;
+extern int adc_completed;
+extern int dma_finish1;
+extern int dma_finish2;
+
+#define DMA_BUFFER_SIZE 21
+uint16_t adc_buffer[DMA_BUFFER_SIZE*2];
+
+void test_adc() {
+//    HAL_DMA_Start(&hdma_adc1,(uint32_t)adc_buffer, (uint32_t)&ADC1->DR, DMA_BUFFER_SIZE);
+
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
+//      ADC1->CR2 |= ADC_CR2_SWSTART;
+  while(1) {
+    if(HAL_ADC_Start(&hadc1) != HAL_OK) {
+      ERROR_LOG("adc start");
+    };
+    HAL_Delay(1);
+    if( adc_completed || dma_finish1 || dma_finish2 ) {
+      for( int i=0;i < DMA_BUFFER_SIZE; i++ ) {
+        gdebug(2,"%5d ",adc_buffer[i]);
+      }
+      gdebug(2, " (%d,%d,%d)\n",adc_completed,dma_finish1,dma_finish2);
+      adc_completed = dma_finish1 = dma_finish2 = 0;
+//  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
+      HAL_Delay(100);
+    }
+  }
 }
 
 void test1() {
@@ -44,8 +75,9 @@ void timer_func(TIM_HandleTypeDef *h) {
 gcavg avg();  // <-----------
 gtimer *gt=0;
 
+
 // ADC_TEST=1 : dma, else : polling
-#define ADC_TEST  0
+#define ADC_TEST  1
 
 #if 0 // blackpill
 #define VREFINT 1.21
@@ -62,6 +94,7 @@ gtimer *gt=0;
 #define V25 1.43        // Voltage at 25C
 #define AVG_SLOPE 0.0043 // 4.3mV/C
 #endif
+
 
 void adc_temp_vref(uint16_t t, uint16_t v) {
     double VrefInt = (VREFINT * ADCMAX) / v;
@@ -88,7 +121,7 @@ void testadc() {
     //adc.read(val);
     //gdebug(2,"adc %8d %5d %5d %5d %5d %5d %5d %5d %5d\n", dma_completed, val[0], val[1], val[2], val[3], val[4], val[5], val[6], val[7]);
     gdebug(2,"adc %8d", dma_completed);
-    for( int i=0; i < adc.channel_nr(); i++ ) {
+    for( int i=0; i < adc.channel_num(); i++ ) {
       gdebug(2,"%6d", val[i]);
 
     }
@@ -109,11 +142,11 @@ void testadc() {
 
   adc.read(val);
 
-  gdebug(2,"adc read(%d)   : ",adc.channel_nr());
-  for( int i=0; i < adc.channel_nr(); i++ ) {
+  gdebug(2,"adc read(%d)   : ",adc.channel_num());
+  for( int i=0; i < adc.channel_num(); i++ ) {
     gdebug(2,"%u ", (val[i] & 0xfff));
   }
-  gdebug(2,"\n");
+  gdebug(2,"  ");
   adc_temp_vref(val[5], val[6]);
 }
 
@@ -263,7 +296,8 @@ void cli_test2(const char*s) {
 extern UART_HandleTypeDef huart1;
 
 void setup() {
-  init_serial(&huart1);
+  init_serial(115200);
+
   init_ticks(eTICK_VOL_100us);
   init_pfn();
 
@@ -273,6 +307,11 @@ void setup() {
   ERROR_OCR("start");
 
   gLED.init();
+
+#if 0
+#if 0
+  test_adc();
+#else
 
   adc_channels ac[] = {
     { ADC_CHANNEL_0, ADC_SAMPLETIME_55CYCLES_5,GPIOA, 0,},
@@ -286,30 +325,34 @@ void setup() {
   };
 
 #if (ADC_TEST==1)  
-  //adc.setup(ADC1,ac,0,0);
   adc.setup(ADC1,ac,0,0);
+  //adc.setup(ADC1,ac,0,0);
   adc.attach(adc_cb);
   adc.start();
 #else
-    adc.setup(ADC1,ac);
+//    adc.setup(ADC1,ac);
 #endif
-  //gt = new gtimer(TIM3,1,7000,0,timer_func);
-  // gt->start();
+#endif
+#endif
+
+  gt = new gtimer(TIM3,1,7000,0,timer_func);
+  gt->start();
 
   set_tty_func("ps",ps );
   set_tty_func("time",cli_test2);
   set_tty_func("str",strtestf);
-  set_tty_func("cmd",command_list);
+  set_tty_func("ls",command_list);
 
   add_pfn(1000, loop_led, "led blink");
   add_pfn(100,test1,"N1");
   add_pfn(10*1000,test2);
-  add_pfn(5200, testadc,"adc read");
+  //add_pfn(1200, testadc,"adc read");
   add_rtpfn(15,rtled);
-  add_pfn(10000,view_proc_all);
   add_pfn(0,tty,"key in");
   add_pfn(10000, test6, "elapsed test");
-  add_proc("check pr", test5, 20000, 0);
+  
+  add_proc("viewall", (void (*)(const char *))view_proc_all, 60000, 0);
+  add_proc("check", test5, 20000, 0);
   
   scadule();
 }

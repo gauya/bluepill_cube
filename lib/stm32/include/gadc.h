@@ -15,6 +15,7 @@ extern "C" {
 #include <stm32f1xx_hal_rcc.h>
 #include <stm32f1xx_hal_dma.h>
 
+
 extern void (*_stm32adc_callback)();
 
 #ifdef __cplusplus
@@ -48,7 +49,7 @@ enum { // adc error
 class stm32adc {
 private:
 protected:
-  ADC_HandleTypeDef _ha; // ->Instance (ADC_TypeDef *adc);
+  ADC_HandleTypeDef *_ha; // ->Instance (ADC_TypeDef *adc);
   ADC_ChannelConfTypeDef _ac;
   struct adc_channels *_chs;  
   uint16_t _mode;
@@ -58,9 +59,8 @@ protected:
   int add_channel(adc_channels *ac); // return channels;
   int add_channel(uint32_t ch, uint32_t samplerate=ADC_SAMPLETIME_41CYCLES_5); // Vref, temp, ADC_SAMPLETIME_2CYCLE_5
   void conv();
-  //inline ADC_HandleTypeDef *get_handle() { return &_ha; }
 public:
-  int _channel_nr;
+  int _channel_num;
 
 public:
   stm32adc();
@@ -74,9 +74,9 @@ public:
   void stop();
 
   bool isready() { return (_status != eADC_NOTSETUP);}
-  int channel_nr() { return _channel_nr; };
+  int channel_num() { return _channel_num; };
   uint16_t& mode() { return _mode; }
-  ADC_HandleTypeDef *get_handle() { return &_ha; }
+  ADC_HandleTypeDef *get_handle() { return _ha; }
 
   int read();
   int read(uint16_t *buf); // buf length = chs
@@ -101,10 +101,10 @@ public:
     int read();
 };
 
-class stm32adcdma : public stm32adcint {
+class stm32adcdma : public stm32adc {
 protected:
     uint16_t *_dmabuf;
-    uint16_t *get_buffer() { return _dmabuf;};
+    uint16_t *_outbuf;
 public:
 public:
     stm32adcdma();
@@ -113,6 +113,9 @@ public:
     
     void setup(ADC_TypeDef *adc, struct adc_channels *ac, void (*intrf)(), uint16_t *dmabuf);
     void setup();
+
+    void attach( void (*intrf)() );
+    void detach();
 
     void start();
     void stop();
@@ -123,4 +126,3 @@ public:
 };
 
 #endif // __GADC_H__
-

@@ -74,7 +74,7 @@ public:
 // debugging
 	GPIO_TypeDef *PORT() { return this->port; }
 	uint16_t mask() { return _mask; }
-	int PIN() { this->pin; }
+	int PIN() { return this->pin; }
 
 // operator
 	ggpio &operator=(gpio_t&);

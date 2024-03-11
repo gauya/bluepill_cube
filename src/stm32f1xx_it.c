@@ -55,7 +55,10 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern UART_HandleTypeDef huart1;
+
+extern DMA_HandleTypeDef hdma_adc1;
+extern ADC_HandleTypeDef hadc1;
+
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -198,20 +201,7 @@ void SysTick_Handler(void)
 /* please refer to the startup file (startup_stm32f1xx.s).                    */
 /******************************************************************************/
 
-/**
-  * @brief This function handles USART1 global interrupt.
-  */
-void USART1_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART1_IRQn 0 */
-
-  /* USER CODE END USART1_IRQn 0 */
-  HAL_UART_IRQHandler(&huart1);
-  /* USER CODE BEGIN USART1_IRQn 1 */
-
-  /* USER CODE END USART1_IRQn 1 */
-}
-
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
+

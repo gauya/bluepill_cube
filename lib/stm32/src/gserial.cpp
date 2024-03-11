@@ -5,8 +5,12 @@
  *      Author: seu
  */
 
+
+#include "stm32f1xx_it.h"
 #include "gserial.h"
 #include <stdarg.h>
+#include "ggpio.h"
+#include "glog.h"
 
 serial_info_t __gsi[MAX_SERIAL_NUM] = {0,};
 
@@ -19,7 +23,102 @@ static int _default_cdc_id = -1;
 
 UART_HandleTypeDef *phuart_console=0;
 
-int init_uart(UART_HandleTypeDef *phuart, int id) {
+UART_HandleTypeDef huart1,huart2,huart3;
+
+
+void USART1_IRQHandler(void) {
+  HAL_UART_IRQHandler(&huart1);
+}
+
+
+void USART2_IRQHandler(void) {
+  HAL_UART_IRQHandler(&huart2);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	serial_info_t *s;
+	if( (s = _get_serial(huart)) == 0 ) {
+		ERROR_LOG("get serial nok");
+		return ; // internal error
+	}
+
+	fifo_putc(s->_rx_buf,s->_rx_ch);
+	if( s->_echo ) {
+		HAL_UART_Transmit(huart,(uint8_t*)&(s->_rx_ch),1,100); // echo
+	}
+	HAL_UART_Receive_IT(huart,&(s->_rx_ch),1); // next recv interrupt enable
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
+	if(huart->Instance == phuart_console->Instance) {
+  	} else {
+  	}
+}
+
+void HAL_UART_MspInit(UART_HandleTypeDef* huart)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  if(huart->Instance==USART1) {
+  /* USER CODE BEGIN USART1_MspInit 0 */
+
+  /* USER CODE END USART1_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_USART1_CLK_ENABLE();
+
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    /**USART1 GPIO Configuration
+    PA9     ------> USART1_TX
+    PA10     ------> USART1_RX
+    */
+
+   #if 1 // bluepill, blackpill
+   	gpio_t tx={ GPIOA,9}, rx={GPIOA,10 };
+   #else
+   #endif
+
+    GPIO_InitStruct.Pin = (1 << tx.pin); // GPIO_PIN_9;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(tx.port, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = (1 << rx.pin); //GPIO_PIN_10;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(rx.port, &GPIO_InitStruct);
+
+    /* USART1 interrupt Init */
+    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
+  /* USER CODE BEGIN USART1_MspInit 1 */
+
+  /* USER CODE END USART1_MspInit 1 */
+  }
+}
+
+static int stm32_uart_init(USART_TypeDef *uart, uint32_t speed=115200, gpio_t *tx=0, gpio_t *rx=0) {
+  UART_HandleTypeDef *hu;
+
+  hu = (uart == USART1)? &huart1 : (uart == USART2)? &huart2 : 0;
+
+  if( hu == 0 ) return -1;
+
+  hu->Instance = uart;
+  hu->Init.BaudRate = speed;
+  hu->Init.WordLength = UART_WORDLENGTH_8B;
+  hu->Init.StopBits = UART_STOPBITS_1;
+  hu->Init.Parity = UART_PARITY_NONE;
+  hu->Init.Mode = UART_MODE_TX_RX;
+  hu->Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  hu->Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(hu) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  return 0;
+}
+
+int init_uart(int baud, USART_TypeDef *uart, int id) {
+	stm32_uart_init(uart,baud);
 	if( id >= MAX_SERIAL_NUM || id < -1 )
 		return -2;
 
@@ -40,24 +139,21 @@ int init_uart(UART_HandleTypeDef *phuart, int id) {
 
 	serial_info_t *s = &__gsi[id];
 	s->_type = 0;
-	s->Handle = phuart;
+	s->Handle = (uart == USART1)? &huart1 : (uart == USART2)? &huart2 : 0;
 	if( id==0 )
-		phuart_console = phuart;
+		phuart_console = s->Handle;
 
 	s->_rx_buf = new (gfifo_t); //[sizeof(gfifo_t)];
 	fifo_set(s->_rx_buf,0,0,0);
-/*
-	s->putc = uputc;
-	s->getc = ugetc;
-	s->write = uwrite;
-*/
+
 	s->_inited = 1;
 	s->_fd = id;
 	
 	if( _default_uart_id == -1 ) 
 		_default_uart_id = id;
 
-	HAL_UART_Receive_IT(phuart,(uint8_t*)&(s->_rx_ch),1);
+
+	HAL_UART_Receive_IT(s->Handle,(uint8_t*)&(s->_rx_ch),1);
 
 	return id;
 }
@@ -103,7 +199,7 @@ int init_cdc(int id) {
 	return id;
 }
 
-int init_serial(UART_HandleTypeDef *phuart) {
+int init_serial(int baud,USART_TypeDef *uart) {
 	serial_info_t *s = &__gsi[0];
 
 	if( get_console()->_inited == 0) {
@@ -116,7 +212,7 @@ int init_serial(UART_HandleTypeDef *phuart) {
 		}
 	}
 
-	int id = init_uart(phuart,0);
+	int id = init_uart(baud,uart);
 
 	return id;
 }
@@ -152,7 +248,7 @@ int __io_putchar(int ch) {
 }
 
 int __io_getchar() {
-	int ch;
+	int ch=0;
 	if(get_console()->_type == 0) {
 		HAL_UART_Receive_IT(get_console()->Handle, &get_console()->_rx_ch, 1);
 		ch = fifo_getc(get_console()->_rx_buf);
@@ -315,67 +411,4 @@ int gdprintf(int fd,const char*fmt,...) {
 void uart_receive_it() {
 	HAL_UART_Receive_IT(phuart_console,(uint8_t*)&get_console()->_rx_ch,1);
 }
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	serial_info_t *s;
-	if( (s = _get_serial(huart)) == 0 ) {
-		return ; // internal error
-	}
-
-	fifo_putc(s->_rx_buf,s->_rx_ch);
-	if( s->_echo ) {
-		HAL_UART_Transmit(huart,(uint8_t*)&(s->_rx_ch),1,100); // echo
-	}
-	HAL_UART_Receive_IT(huart,&(s->_rx_ch),1); // next recv interrupt enable
-}
-
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
-	if(huart->Instance == phuart_console->Instance) {
-  	} else {
-
-  	}
-}
-
-
-#if 0
-int usart_reinit(UART_HandleTypeDef *hup,USART_TypeDef *USARTx, uint32_t brate) {
-	HAL_UART_DeInit(hup);
-
-	hup->Instance = USARTx;
-	hup->Init.BaudRate = (brate == 0)? 115200 : brate;
-	hup->Init.WordLength = UART_WORDLENGTH_8B;
-	hup->Init.StopBits = UART_STOPBITS_1;
-	hup->Init.Parity = UART_PARITY_NONE;
-	hup->Init.Mode = UART_MODE_TX_RX;
-	hup->Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	hup->Init.OverSampling = UART_OVERSAMPLING_16;
-#if __H7
-	hup->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-	hup->Init.ClockPrescaler = UART_PRESCALER_DIV1;
-	hup->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-#endif
-	if(HAL_UART_Init(hup) != HAL_OK) {
-		return -1; // Error_Handler();
-	}
-
-#if __H7
-	HAL_UARTEx_SetTxFifoThreshold(hup, UART_TXFIFO_THRESHOLD_1_8);
-	HAL_UARTEx_SetRxFifoThreshold(hup, UART_RXFIFO_THRESHOLD_1_8);
-	HAL_UARTEx_DisableFifoMode(hup);
-#endif
-
-	init_uart(hup,-1);
-
-	int idx = get_uart_serial_id(USARTx);
-	HAL_UART_Receive_IT(hup,(uint8_t*)&__rx_ch,1);
-
-	return idx;
-}
-
-void uart_receive_it() {
-	HAL_UART_Receive_IT(phuart_console,(uint8_t*)&__rx_ch,1);
-}
-
-
-#endif
 

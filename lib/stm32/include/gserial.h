@@ -58,9 +58,9 @@ int gputc(int ch,int fd=0);
 int gputs(const char* str,int fd=0);
 int gwrite(uint8_t *data, uint16_t len,int fd=0);
 
-int init_uart(UART_HandleTypeDef *phuart, int fd=-1);
+int init_uart(int baud, USART_TypeDef *uart, int id=-1);
 int init_cdc(int id=-1);
-int init_serial(UART_HandleTypeDef *phuart);
+int init_serial(int baud=115200,USART_TypeDef *uart=USART1);
 
 #ifdef __cplusplus
 extern "C" {
