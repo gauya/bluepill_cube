@@ -57,19 +57,19 @@ void gdebug(int lev, const char* fmt, ...) {
 	return;
 }
 
-void error_log( const char *msg, const char *file, int line) {
-	gdebug(0, "[%s:%d] %s\n", file, line,msg);
+void error_log( const char *msg, const char *file, const char *func, int line) {
+	gdebug(0, "[%s(%s):%d] %s\n", file, func, line,msg);
 }
 
 #include <time.h>
-void error_log2( const char *msg, const char *file, int line) {
+void error_log2( const char *msg, const char *file, const char *func, int line) {
 	time_t now;
 	char buf[24];
 
 	time(&now);
 	strftime(buf, 23, "%Y-%m-%d %H:%M:%S", localtime(&now));
 
-	gdebug(0, "[%s %s:%d] %s\n", buf, file, line, msg);
+	gdebug(0, "[%s %s(%s):%d] %s\n", buf, file, func, line, msg);
 }
 
 

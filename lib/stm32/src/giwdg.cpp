@@ -16,7 +16,7 @@ void iwdg_init(int rl) {
   hiwdg.Init.Reload = 4095;
   if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
   {
-    ERROR_OCR(""); //Error_Handler();
+    ERROR_LOG(""); //Error_Handler();
   }
 
 #if 0 //LL_DRIVER

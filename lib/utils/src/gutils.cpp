@@ -131,4 +131,18 @@ gam::~gam() {
 	_gs = 0;
 }
 
+
+double gpid::update(double current_value,double setpoint) {
+	double error = setpoint - current_value;
+	_integral += error;
+	_derivative = error - _previous_error;
+	_previous_error = error;
+
+	double output = _kp * error + _ki * _integral + _kd * _derivative;
+		// 출력 제한 ( -1.0f ~ 1.0f )
+	output = fmax(fmin(output, 1.0f), -1.0f);
+
+	return output;
+}
+
 #endif // __cplusplus

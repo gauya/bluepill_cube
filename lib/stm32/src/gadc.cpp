@@ -327,7 +327,7 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
 #endif //STM32F4
 
   if (HAL_ADC_Init(_ha) != HAL_OK) {// --> call HAL_ADC_MspInit()
-      ERROR_OCR(""); //Error_Handler();
+      ERROR_LOG(""); //Error_Handler();
   }
 
   _chs = ac;
@@ -356,7 +356,7 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
     _hd->Init.Priority = DMA_PRIORITY_LOW;
     if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
     {
-      ERROR_OCR(""); //Error_Handler();
+      ERROR_LOG(""); //Error_Handler();
     }
 
 #else  // F4
@@ -376,7 +376,7 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
   _hd->Init.FIFOMode = DMA_FIFOMODE_DISABLE;
   if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
   {
-    ERROR_OCR(""); //Error_Handler();
+    ERROR_LOG(""); //Error_Handler();
   }
 
   hdma_adcp = &hdma_adc1;
@@ -388,7 +388,7 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
   HUL_ADC_nvic(adc, 1);
 
   if(HAL_ADC_Start_DMA(_ha, (uint32_t*)_dmabuf, channel_num()) != HAL_OK) {
-    ERROR_OCR("adc start dma nok"); //Error_Handler();
+    ERROR_LOG("adc start dma nok"); //Error_Handler();
   }
 
   _status = 0;
@@ -401,7 +401,7 @@ int gadc::add_channel(uint32_t ch,uint32_t samplerate) {
   sConfig.Rank = ++_channel_num; // 1 ~ ,  
 
   if (HAL_ADC_ConfigChannel(_ha, &sConfig) != HAL_OK) {
-    ERROR_OCR("add adc channel"); //Error_Handler();
+    ERROR_LOG("add adc channel"); //Error_Handler();
   }
 
   return  _channel_num; // rank is auto increase sequentially
@@ -416,7 +416,7 @@ int gadc::add_channel(struct adc_channels *ac) {
   sConfig.SamplingTime = ac->sampling; //ADC_SAMPLETIME_3CYCLES;
   
   if (HAL_ADC_ConfigChannel(_ha, &sConfig) != HAL_OK) {
-    ERROR_OCR("add adc channel"); //Error_Handler();
+    ERROR_LOG("add adc channel"); //Error_Handler();
   }
 
   if( ac->port != 0 ) { // not Vrefint, temperture, ..
@@ -475,7 +475,7 @@ int gadc::read(uint16_t *buf) {
   int i = 0;
   for(; i < _channel_num; i++ ) {
     if(HAL_ADC_PollForConversion(_ha, 1) != HAL_OK) {
-    ERROR_OCR(""); //Error_Handler();
+    ERROR_LOG(""); //Error_Handler();
     }
     
     uint32_t v = HAL_ADC_GetValue(_ha);  // get adc value
@@ -592,7 +592,7 @@ void stm32adc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
 
   if (HAL_ADC_Init(_ha) != HAL_OK) // --> call HAL_ADC_MspInit()
   {
-    ERROR_OCR(""); //Error_Handler();
+    ERROR_LOG(""); //Error_Handler();
   }
 
   _chs = ac;
@@ -621,7 +621,7 @@ int stm32adc::add_channel(uint32_t ch,uint32_t samplerate) {
   sConfig.Rank = ++_channel_num; // 1 ~ ,  
 
   if (HAL_ADC_ConfigChannel(_ha, &sConfig) != HAL_OK) {
-    ERROR_OCR("add adc channel"); //Error_Handler();
+    ERROR_LOG("add adc channel"); //Error_Handler();
   }
 
   return  _channel_num; // rank is auto increase sequentially
@@ -636,7 +636,7 @@ int stm32adc::add_channel(struct adc_channels *ac) {
   sConfig.SamplingTime = ac->sampling; //ADC_SAMPLETIME_3CYCLES;
   
   if (HAL_ADC_ConfigChannel(_ha, &sConfig) != HAL_OK) {
-    ERROR_OCR("add adc channel"); //Error_Handler();
+    ERROR_LOG("add adc channel"); //Error_Handler();
   }
 
   if( ac->port != 0 ) { // not Vrefint, temperture, ..
@@ -666,7 +666,7 @@ void stm32adc::start() {
   if( ! isready() ) return;
 
   if(HAL_ADC_Start(_ha) != HAL_OK) {
-    ERROR_OCR(""); //Error_Handler();
+    ERROR_LOG(""); //Error_Handler();
   }
 }
 
@@ -679,7 +679,7 @@ void stm32adc::stop() {
 void stm32adc::conv() {
   if( isready() ) {
     if(HAL_ADC_PollForConversion(_ha, this->_timeout) != HAL_OK) {
-      ERROR_OCR(""); //Error_Handler();
+      ERROR_LOG(""); //Error_Handler();
     }
   }
 }
@@ -692,7 +692,7 @@ int stm32adc::read() {
     start();
     
     if(HAL_ADC_PollForConversion(_ha, this->_timeout) != HAL_OK) {
-    ERROR_OCR(""); //Error_Handler();
+    ERROR_LOG(""); //Error_Handler();
     }
   }
 
@@ -711,7 +711,7 @@ int stm32adc::read(uint16_t *buf) {
   int i = 0;
   for(; i < _channel_num; i++ ) {
     if(HAL_ADC_PollForConversion(_ha, 1) != HAL_OK) {
-    ERROR_OCR(""); //Error_Handler();
+    ERROR_LOG(""); //Error_Handler();
     }
     
     uint32_t v = HAL_ADC_GetValue(_ha);  // get adc value
@@ -752,7 +752,7 @@ void stm32adcint::setup(ADC_TypeDef *adc, struct adc_channels *ac, void (*intrf)
 
 void stm32adcint::start() {
   if( HAL_ADC_Start_IT(this->_ha) != HAL_OK ) {
-    ERROR_OCR(""); //Error_Handler();
+    ERROR_LOG(""); //Error_Handler();
   }
 }
 
@@ -813,7 +813,7 @@ void stm32adcdma::setup(ADC_TypeDef *adc, struct adc_channels *ac, void (*intrf)
   hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;
   if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
   {
-    ERROR_OCR(""); //Error_Handler();
+    ERROR_LOG(""); //Error_Handler();
   }
 
 #else  // F4
@@ -830,7 +830,7 @@ void stm32adcdma::setup(ADC_TypeDef *adc, struct adc_channels *ac, void (*intrf)
   hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
   if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
   {
-    ERROR_OCR(""); //Error_Handler();
+    ERROR_LOG(""); //Error_Handler();
   }
 
   hdma_adcp = &hdma_adc1;
@@ -851,29 +851,29 @@ stm32adcdma::~stm32adcdma() {
 
 void stm32adcdma::start() {
   if( ! isready() ) {
-    ERROR_OCR("adc start not ready"); 
+    ERROR_LOG("adc start not ready"); 
     return;
   }
 
 #if 0
   stm32adcint::start(); 
   if( HAL_DMA_Start_IT(&hdma_adc1, (uint32_t)&ADC1->DR, (uint32_t)_dmabuf[0],  channel_num()) != HAL_OK ) {
-      ERROR_OCR("adc dma start it nok"); 
+      ERROR_LOG("adc dma start it nok"); 
   }
   if( HAL_ADC_Start(get_handle()) != HAL_OK ) {
-    ERROR_OCR("adc start nok"); 
+    ERROR_LOG("adc start nok"); 
   }
  //  HAL_DMA_Start(&hdma_adc1, (uint32_t)&hadc1.Instance->DR, (uint32_t)_dmabuf, channel_num());
   if( HAL_ADC_Start(get_handle()) != HAL_OK ) {
-    ERROR_OCR("adc start nok"); 
+    ERROR_LOG("adc start nok"); 
   }
   if( HAL_DMA_Start_IT(&hdma_adc1, (uint32_t)&ADC1->DR, (uint32_t)_dmabuf[0],  channel_num()) != HAL_OK ) {
-      ERROR_OCR("adc dma start it nok"); 
+      ERROR_LOG("adc dma start it nok"); 
   }
 #else
  
   if( HAL_ADC_Start_DMA(get_handle(), (uint32_t*)_dmabuf, channel_num()) != HAL_OK ) {
-    ERROR_OCR("adc start dma nok"); 
+    ERROR_LOG("adc start dma nok"); 
   };
 #endif  
 }
@@ -1047,7 +1047,7 @@ DMA_HandleTypeDef hdma_adc1;
     hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
     {
-    ERROR_OCR(__FILE__, __LINE__); //Error_Handler();
+    ERROR_LOG(__FILE__, __LINE__); //Error_Handler();
     }
 
     __HAL_LINKDMA(_ha,DMA_Handle,hdma_adc1);

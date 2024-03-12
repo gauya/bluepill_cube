@@ -144,66 +144,26 @@ public:
 
 class gpid {
 private:
-    double kp;  // Proportional Gain
-    double ki;  // Integral Gain
-    double kd;  // Derivative Gain
+    double _kp;  // Proportional Gain
+    double _ki;  // Integral Gain
+    double _kd;  // Derivative Gain
 
-    double target;  // 목표치
-    double integral; // 적분
-	double derivative; 
-    double previous_error; // 이전 오차
+    double _target;  // 목표치
+    double _integral; // 적분
+	double _derivative; 
+    double _previous_error; // 이전 오차
 
 public:
     gpid(double kp, double ki, double kd) 
-		: kp(kp), ki(ki), kd(kd), target(0.0), integral(0.0), previous_error(0.0) {}
+		: _kp(kp), _ki(ki), _kd(kd), _target(0.0), _integral(0.0), _previous_error(0.0) {}
+	~gpid() {}
 
-    // 목표치 설정
-    void setpoint(double setpoint) {
-        target = setpoint;
-    }
+    double update(double current_value,double setpoint);
 
-    // PID 제어 계산
-    double calculate(double current_value) {
-        double error = target - current_value;
-        integral += error;
-        double derivative = error - previous_error;
-
-        // PID 제어 계산
-        double output = kp * error + ki * integral + kd * derivative;
-
-        // 이전 오차 업데이트
-        previous_error = error;
-
-        return output;
-    }
-
-	double Update(double error, double dt) {
-		// 누적 오차 계산
-		integral += error * dt;
-
-		// 미분 오차 계산
-		derivative = (error - previous_error) / dt;
-
-		// PID 제어 출력 계산
-		double output = kp * error + ki * integral + kd * derivative;
-
-	    // 출력 제한 ( -1.0f ~ 1.0f )
-    	output = fmax(fmin(output, 1.0f), -1.0f);
-	
-		// 이전 오차 저장
-		previous_error = error;
-
-		return output;
-	}
-    double compute(double current_value,double setpoint) {
-        double error = setpoint - current_value;
-        integral += error;
-        double derivative = error - previous_error;
-        previous_error = error;
-
-        double output = kp * error + ki * integral + kd * derivative;
-        return output;
-    }
+	inline double& goal() { return _target; }
+	inline double& kp() { return _kp; }
+	inline double& ki() { return _ki; }
+	inline double& kd() { return _kd; }
 };
 
 #if 0 // example

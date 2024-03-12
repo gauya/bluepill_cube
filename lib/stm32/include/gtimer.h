@@ -15,6 +15,7 @@ extern "C" {
 //#include "stm32f4xx_hal_tim.h"
 //#include "stm32_hal_tim.h"
 #include "stm32f103xb.h"
+#include "ggpio.h"
 
 #ifdef __cplusplus
 }
@@ -45,6 +46,9 @@ public:
     void set(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, uint16_t mode=0, void (*f)(TIM_HandleTypeDef *) = 0);
     void start();
     void stop();
+
+    void pwm(int channel, uint32_t pulse, uint32_t mode=TIM_OCMODE_PWM1,gpio_t *g=0); // mode=TIM_OCMODE_INACTIVE,TIM_OCMODE_FROZEN, TIM_OCMODE_TIMING,PWM1,PWM2, ... pulse : CCR, channel=0~3
+    void pwm_stop(int channel);
 
     uint32_t psc(int v= -1);
     uint32_t arr(int v= -1);

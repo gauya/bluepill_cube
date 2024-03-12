@@ -120,7 +120,7 @@ void gtimer::set(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, uint16_t mode, v
 #if 1
     if (HAL_TIM_Base_Init(&_ht) != HAL_OK)
     {
-        //Error_Handler();
+        ERROR_LOG("");
     }
 #else
     _ht.State = HAL_TIM_STATE_BUSY;
@@ -154,6 +154,40 @@ void gtimer::stop() {
     } else {
         HAL_TIM_Base_Stop(&_ht);
     }
+}
+
+void gtimer::pwm(int channel, uint32_t pulse, uint32_t mode, gpio_t *gpio_ch) {
+  if( channel < 0 || channel > 3) {
+    ERROR_LOG("pwm channel over range");
+    return;
+  }
+
+    // GPIO, GPIO_MODE_AF_PP, GPIO_PULLUP, GPIO_AFx_TIMx
+    if(gpio_ch) {
+        GPIO_InitTypeDef gi;
+        gi.Pin = (1 << gpio_ch->pin);
+        gi.Mode = GPIO_MODE_AF_PP;
+        gi.Pull = GPIO_PULLUP;
+    //    gi.Alternate = GPIO_AFx_TIMx;
+        HAL_GPIO_Init(gpio_ch->port, &gi);
+    }
+
+  uint32_t ch = (channel == 0)? TIM_CHANNEL_1 : (channel == 1)? TIM_CHANNEL_2: (channel == 2)? TIM_CHANNEL_3: TIM_CHANNEL_4;
+
+  TIM_OC_InitTypeDef sConfigOC;
+  sConfigOC.OCMode = mode;
+  sConfigOC.Pulse = pulse;
+  HAL_TIM_OC_ConfigChannel(&_ht, &sConfigOC, ch);
+  HAL_TIM_PWM_Start(&_ht, ch);
+}
+
+void gtimer::pwm_stop(int channel) {
+  if( channel < 0 || channel > 3) {
+    ERROR_LOG("pwm channel over range");
+    return;
+  }
+  uint32_t ch = (channel == 0)? TIM_CHANNEL_1 : (channel == 1)? TIM_CHANNEL_2: (channel == 2)? TIM_CHANNEL_3: TIM_CHANNEL_4;
+  HAL_TIM_PWM_Stop(&_ht, ch);
 }
 
 uint32_t gtimer::psc(int v) {

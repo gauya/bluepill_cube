@@ -27,10 +27,10 @@ extern int adc_completed;
 extern int dma_finish1;
 extern int dma_finish2;
 
-#define DMA_BUFFER_SIZE 21
+#define DMA_BUFFER_SIZE 7
 uint16_t adc_buffer[DMA_BUFFER_SIZE*2];
 
-void test_adc() {
+void test_adc_loop() {
 //    HAL_DMA_Start(&hdma_adc1,(uint32_t)adc_buffer, (uint32_t)&ADC1->DR, DMA_BUFFER_SIZE);
 
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
@@ -49,6 +49,22 @@ void test_adc() {
 //  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
       HAL_Delay(100);
     }
+  }
+}
+
+void test_adc() {
+    if(HAL_ADC_Start(&hadc1) != HAL_OK) {
+      ERROR_LOG("adc start");
+    };
+    HAL_Delay(1);
+    if( adc_completed || dma_finish1 || dma_finish2 ) {
+      for( int i=0;i < DMA_BUFFER_SIZE; i++ ) {
+        gdebug(2,"%5d ",adc_buffer[i]);
+      }
+      float temperature = (adc_buffer[0] / 4095.0) * 3.3;
+            temperature = (temperature - 0.76) / 0.0025 + 25.0;
+      gdebug(2, " (%d,%d,%d %.3fC)\n",adc_completed,dma_finish1,dma_finish2, temperature);
+      adc_completed = dma_finish1 = dma_finish2 = 0;
   }
 }
 
@@ -295,6 +311,7 @@ void cli_test2(const char*s) {
 
 extern UART_HandleTypeDef huart1;
 
+
 void setup() {
   init_serial(115200);
 
@@ -304,7 +321,7 @@ void setup() {
 // ---------------------------------------------------------
   log_level = 2;
   
-  ERROR_OCR("start");
+  ERROR_LOG("start");
 
   gLED.init();
 
@@ -338,6 +355,8 @@ void setup() {
   gt = new gtimer(TIM3,1,7000,0,timer_func);
   gt->start();
 
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
+
   set_tty_func("ps",ps );
   set_tty_func("time",cli_test2);
   set_tty_func("str",strtestf);
@@ -346,7 +365,7 @@ void setup() {
   add_pfn(1000, loop_led, "led blink");
   add_pfn(100,test1,"N1");
   add_pfn(10*1000,test2);
-  //add_pfn(1200, testadc,"adc read");
+  add_pfn(1200, test_adc,"adc read");
   add_rtpfn(15,rtled);
   add_pfn(0,tty,"key in");
   add_pfn(10000, test6, "elapsed test");

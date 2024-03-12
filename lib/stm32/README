@@ -1,23 +1,13 @@
-. HUL_GPIO_CLK_Enable(GPIO_TypeDef *)
+uart,adc를 라이브러리로 만들려고 했는데 ...
 
-. ADC_SAMPLE_0 , ADC_SAMPLE_1, ... mcu마다 정의된값이 다르다. 굳이 sampling값에 맞추려 말고 논리적인 정의
+mbed나 아두이노처럼 비슷하게 쓰려고 한다. 
 
-. HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0);            ADC1_IRQn, or get_adc_irqn(ADC1) 
-  HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
+UART, ADC - 두가지 문제들이 있었다.
+  - void USART1_IRQHandler(void)... 이런 함수를 xx_it.c에서 다른곳으로 옮기니 먹통이 됐다.  
+    --> stm32f1xx_it.h파일을 올려주니 해결됐는데 내가 C와 C++을 함께 쓰니 extern "C"가 필요했는데 그냥 인터럽트 핸들러먄 옮기면서 문제된듯하다.
 
+  - xx_hal_msp.c파일에 Init()함수들의 보조함수들이 있는데 이 함수들의 내용만 따로 빼서 만들면서 발생한 문제
+    --> ...Init()함수는 필요시 중간에 ...MspInit()함수를 추가로 호출하는데 호출되는 타이밍이 있다. 이걸 무시하고 작성하면 문제가 됨
+    모든 문제를 낱낱이 해결하든가. void HAL_xx_MspInit()이런 함수이름을 바꾸지 않고 그대로 쓰던가. 아니면 callback한수를 만들어 등록하든가 해야 된다.
+    뭘하든 cubemx에서 만들어준 이름을 그대로 쓰자니 기분 나쁘고 callback을 쓰는건 더 손만가고 짜증나는 일이다.
 
-  //_ha.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
-  //_ha.Init.Resolution = ADC_RESOLUTION_12B;
-  //_ha.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  _ha.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  _ha.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  _ha.Init.NbrOfConversion = chs;                   // <> _channel_nr
-  //_ha.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  _ha.Init.DiscontinuousConvMode = DISABLE;
-  _ha.Init.ScanConvMode = ENABLE;
-  _ha.Init.ContinuousConvMode = ENABLE;
-
-// multi, continues, use dma
-  if( _mode == eADC_DMA || _mode == eADC_DMAINTERRUPT ) {
-    //_ha.Init.DMAContinuousRequests = ENABLE;
- 
