@@ -1,4 +1,3 @@
--- hwang chiyeong
 
 I use bluepill and blackpill a lot, and sometimes cortex-M7. I am using the HAL library and used stm32cubeide and stm32cubeMX as a development environment, but now I work in vscode.
 Using the Arduino frame is often convenient, but there are also many limitations, so working with the HAL library through stm32cubemx is helpful in managing basic pin assignments, clocks, etc.
@@ -35,3 +34,5 @@ void setup() {
 
 It becomes a program like this.
 Each task is executed in scadule(), and tasks that require real-time are scheduled in timer interrupts.
+
+h.cy
