@@ -25,7 +25,7 @@ UART_HandleTypeDef *phuart_console=0;
 
 UART_HandleTypeDef huart1,huart2,huart3;
 
-
+extern "C" {
 void USART1_IRQHandler(void) {
   HAL_UART_IRQHandler(&huart1);
 }
@@ -33,6 +33,7 @@ void USART1_IRQHandler(void) {
 
 void USART2_IRQHandler(void) {
   HAL_UART_IRQHandler(&huart2);
+}
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {

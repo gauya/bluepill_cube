@@ -26,20 +26,25 @@ extern DMA_HandleTypeDef hdma_adc1;
 extern int adc_completed;
 extern int dma_finish1;
 extern int dma_finish2;
+extern int adc_mode;
 
 #define DMA_BUFFER_SIZE 7
 uint16_t adc_buffer[DMA_BUFFER_SIZE*2];
 
 void test_adc_loop() {
+  //HAL_ADC_Start_IT(&hadc1);
+  //HAL_DMA_Start_IT(&hdma_adc1, (uint32_t)&hadc1.Instance->DR, (uint32_t)adc_buffer, DMA_BUFFER_SIZE);  
 //    HAL_DMA_Start(&hdma_adc1,(uint32_t)adc_buffer, (uint32_t)&ADC1->DR, DMA_BUFFER_SIZE);
-
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
+//  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
+//  HAL_ADC_Start(&hadc1);
 //      ADC1->CR2 |= ADC_CR2_SWSTART;
   while(1) {
-    if(HAL_ADC_Start(&hadc1) != HAL_OK) {
-      ERROR_LOG("adc start");
-    };
-    HAL_Delay(1);
+    if( adc_mode != 1 ) {
+      if(HAL_ADC_Start(&hadc1) != HAL_OK) {
+        ERROR_LOG("adc start");
+      };
+      HAL_Delay(1);
+    }
     if( adc_completed || dma_finish1 || dma_finish2 ) {
       for( int i=0;i < DMA_BUFFER_SIZE; i++ ) {
         gdebug(2,"%5d ",adc_buffer[i]);
@@ -53,16 +58,19 @@ void test_adc_loop() {
 }
 
 void test_adc() {
-    if(HAL_ADC_Start(&hadc1) != HAL_OK) {
-      ERROR_LOG("adc start");
-    };
-    HAL_Delay(1);
+    if( adc_mode != 1 ) {
+      if(HAL_ADC_Start(&hadc1) != HAL_OK) {
+        ERROR_LOG("adc start");
+      };
+      HAL_Delay(1);
+    }
     if( adc_completed || dma_finish1 || dma_finish2 ) {
       for( int i=0;i < DMA_BUFFER_SIZE; i++ ) {
         gdebug(2,"%5d ",adc_buffer[i]);
       }
       float temperature = (adc_buffer[0] / 4095.0) * 3.3;
-            temperature = (temperature - 0.76) / 0.0025 + 25.0;
+//      float temperature = (adc_buffer[0] * 4095.0) / 3.3;
+            temperature = (temperature - 1.43) / 0.0043 + 25.0;
       gdebug(2, " (%d,%d,%d %.3fC)\n",adc_completed,dma_finish1,dma_finish2, temperature);
       adc_completed = dma_finish1 = dma_finish2 = 0;
   }
@@ -325,6 +333,9 @@ void setup() {
 
   gLED.init();
 
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
+
+//  test_adc_loop();
 #if 0
 #if 0
   test_adc();
@@ -352,10 +363,8 @@ void setup() {
 #endif
 #endif
 
-  gt = new gtimer(TIM3,1,7000,0,timer_func);
-  gt->start();
-
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
+  //gt = new gtimer(TIM3,1,7000,timer_func);
+  //gt->start();
 
   set_tty_func("ps",ps );
   set_tty_func("time",cli_test2);

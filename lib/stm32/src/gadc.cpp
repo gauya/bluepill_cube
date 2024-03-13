@@ -15,14 +15,14 @@ int adc_completed = 0;
 int dma_finish1 = 0;
 int dma_finish2 = 0;
 
-int adc_mode=1;
+int adc_mode=0;
 int adc_count=0;
 
 int HUL_ADC_clk_enable(ADC_TypeDef *adc);
 int HUL_GPIO_clk_enable(GPIO_TypeDef *gpio);
 int HUL_ADC_nvic(ADC_TypeDef *adc, int enable);
 
-void _HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   if( _stm32adc_callback ) {
     _stm32adc_callback();
   }
@@ -30,52 +30,35 @@ void _HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   if( adc_mode == 1) {
 
   } else {
-    if( adc_count++ > 10) {
-      adc_count = 0;
-      HAL_ADC_Stop(hadc);
-    }
+
   }
 }
 
-void _HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
-  adc_completed++;
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc) {
+  //dma_finish1++;
 }
 
-//ADC_HandleTypeDef *hadcp = 0;
-//DMA_HandleTypeDef *hdma_adcp; // = &hdma_adc1;
+void HAL_DMA_TransferCpltCallback(DMA_HandleTypeDef *hdma) {
+  //dma_finish2++;
+}
 
-#if 0
-void ADC_IRQHandler(void) {
-  if( hadcp )
-    HAL_ADC_IRQHandler(hadcp);
+#if 1 // F1
+void ADC1_2_IRQHandler(void) {
+  HAL_ADC_IRQHandler(&hadc1); 
+}
+
+void DMA1_Channel1_IRQHandler(void) {
+  HAL_DMA_IRQHandler(&hdma_adc1);
+  dma_finish2++;
 }
 #else
-void ADC1_2_IRQHandler(void)
-{
-  /* USER CODE BEGIN ADC1_2_IRQn 0 */
-
-  /* USER CODE END ADC1_2_IRQn 0 */
-  HAL_ADC_IRQHandler(&hadc1); 
-  adc_completed++;
-  /* USER CODE BEGIN ADC1_2_IRQn 1 */
-
-  /* USER CODE END ADC1_2_IRQn 1 */
+void ADC_IRQHandler(void) {
+  HAL_ADC_IRQHandler(&hadc1);
 }
-#endif
-
-#if 0 // F4
 void DMA2_Stream0_IRQHandler(void) {
-  if( hdma_adcp ) {
-    HAL_DMA_IRQHandler(hdma_adcp);
-  }
-}
-#else // F1
-void DMA1_Channel1_IRQHandler(void) {
     HAL_DMA_IRQHandler(&hdma_adc1);
-    dma_finish2++;
 }
 #endif
-
 
 int HUL_ADC_clk_enable(ADC_TypeDef *adc) {
 #if defined(ADC1)
@@ -216,7 +199,6 @@ int HUL_DMA_nvic(ADC_TypeDef *adc, int enable) {
 
 
 // multichannel, use dma, scan mode, not continuous, one adc
-
 
 class gadc {
 private:

@@ -131,7 +131,7 @@ gam::~gam() {
 	_gs = 0;
 }
 
-
+//----------------------------
 double gpid::update(double current_value,double setpoint) {
 	double error = setpoint - current_value;
 	_integral += error;
@@ -143,6 +143,42 @@ double gpid::update(double current_value,double setpoint) {
 	output = fmax(fmin(output, 1.0f), -1.0f);
 
 	return output;
+}
+
+//-----------------------------
+
+int find_gcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+int find_lcm(int a, int b) {
+    int gcd = find_gcd(a, b);
+
+    return ((a * b) / gcd);
+}
+
+uint32_t find_factor_1(uint32_t c, uint32_t *res) {
+	uint32_t m = 0x7fffffff;
+	uint32_t mx=0,my=0;
+
+	for(int i=1; i < 0xffff; i++) {
+		int k = c / i;
+		if( m > k ) {
+			m = c % k;
+			mx = i;
+			my = k;
+		}
+		if( m == 0 ) break;
+	}
+	res[0] = mx;
+	res[1] = my;
+	
+	return m;
 }
 
 #endif // __cplusplus

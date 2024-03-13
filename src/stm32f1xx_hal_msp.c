@@ -23,6 +23,7 @@
 
 /* USER CODE BEGIN Includes */
 extern DMA_HandleTypeDef hdma_adc1;
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

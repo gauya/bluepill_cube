@@ -57,10 +57,26 @@ gtimer::gtimer() {
     _ht.Instance = 0;;
 }
 
-gtimer::gtimer(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, uint16_t mode, void (*f)(TIM_HandleTypeDef *)) {
-    set(TIMx, PSC, ARR, mode, f);
+gtimer::gtimer(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, void (*f)(TIM_HandleTypeDef *)) {
+    set(TIMx, PSC, ARR, f);
 }
 
+gtimer::gtimer(TIM_TypeDef *TIMx, uint32_t period, void (*f)(TIM_HandleTypeDef *)) {
+    uint32_t psc = 1;
+    uint32_t arr;
+
+    if( period < 0xffff ) {
+        psc = (1-1);
+        arr = (period - 1);
+    } else {
+#if 1 // x * y = period     , Consider which method is better when using it with a fixed cycle or when using it with frequent changes.
+        psc = period / 0xffff; // error
+        arr = period % 0xffff;
+#else
+
+#endif
+    }
+}
 gtimer::~gtimer() {
 
 }
@@ -88,7 +104,7 @@ void HUL_TIM_clk_enable( TIM_TypeDef* tim ) {
 #endif
 }
 
-void gtimer::set(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, uint16_t mode, void (*f)(TIM_HandleTypeDef *)) {
+void gtimer::set(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, void (*f)(TIM_HandleTypeDef *)) {
     TIM_Base_InitTypeDef bi;
 
     bi.ClockDivision = 0;
@@ -103,10 +119,10 @@ void gtimer::set(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, uint16_t mode, v
 
     _mode = 0;
 
-    if( mode == 1 ) {
+    if( f ) {
         _int = 1;
 
-        if(f) attach(f);
+        attach(f);
        
         IRQn_Type irqn = (TIMx == TIM2)? TIM2_IRQn : (TIMx == TIM3)? TIM3_IRQn : (TIMx == TIM4)? TIM4_IRQn : (IRQn_Type)0;
     

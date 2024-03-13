@@ -40,10 +40,11 @@ protected:
     TIM_HandleTypeDef _ht;
 public:
     gtimer();
-    gtimer(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, uint16_t mode=0, void (*f)(TIM_HandleTypeDef *) = 0); // mode = 1 interrupt
+    gtimer(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, void (*f)(TIM_HandleTypeDef *) = 0); // mode = 1 interrupt
+    gtimer(TIM_TypeDef *TIMx, uint32_t period, void (*f)(TIM_HandleTypeDef *) = 0); // mode = 1 interrupt
     ~gtimer();
 
-    void set(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, uint16_t mode=0, void (*f)(TIM_HandleTypeDef *) = 0);
+    void set(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, void (*f)(TIM_HandleTypeDef *) = 0);
     void start();
     void stop();
 
