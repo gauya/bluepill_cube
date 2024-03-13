@@ -18,6 +18,8 @@ int dma_finish2 = 0;
 int adc_mode=1;
 int adc_count=0;
 
+gadc __adc1;
+
 int HUL_ADC_clk_enable(ADC_TypeDef *adc);
 int HUL_GPIO_clk_enable(GPIO_TypeDef *gpio);
 int HUL_ADC_nvic(ADC_TypeDef *adc, int enable);
@@ -25,6 +27,9 @@ int HUL_ADC_nvic(ADC_TypeDef *adc, int enable);
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   if( _stm32adc_callback ) {
     _stm32adc_callback();
+  }
+  if(__adc1.status() == -1) {
+    //
   }
   adc_completed++;
   if( adc_mode == 1) {
@@ -316,6 +321,20 @@ gadc::gadc(ADC_TypeDef *adc, struct adc_channels *ac) {
   _timeout = 1; // ms
 
   setup();
+}
+
+gadc::~gadc() {
+  stop();
+  // nvic off
+  HAL_DMA_DeInit(_ha->DMA_Handle);
+  HAL_NVIC_DisableIRQ(ADC1_2_IRQn);
+  __HAL_RCC_ADC1_CLK_DISABLE();
+
+  if( _dmabuf ) {
+    delete[] _dmabuf;
+    delete[] _outbuf;
+  }
+//  detach();
 }
 
 void gadc::setup() {

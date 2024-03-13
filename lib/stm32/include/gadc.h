@@ -70,7 +70,7 @@ public:
   gadc();
   gadc(ADC_TypeDef *adc, struct adc_channels *ac);
   //gadc(ADC_TypeDef *adc, int ch, GPIO_TypeDef *port, int pin);
-  virtual ~gadc(){};
+  virtual ~gadc();
   
   void setup(ADC_TypeDef *adc, struct adc_channels *ac);
   void setup();
@@ -80,9 +80,13 @@ public:
   int channel_num() { return _channel_num; };
   uint16_t& mode() { return _mode; }
   ADC_HandleTypeDef *get_handle() { return _ha; }
+  int status() { return _status; }
 
   int start();
   int stop();
+
+//  void attach( void (*intrf)() );
+//  void detach();
 
   int read();
   int read(uint16_t *buf); // buf length = chs
