@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-DMA_HandleTypeDef hdma_adc1;
-ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1,hdma_adc2;
+ADC_HandleTypeDef hadc1,hadc2;
 
 extern uint16_t *adc_buffer;
 void (*_stm32adc_callback)() = 0;
@@ -15,7 +15,7 @@ int adc_completed = 0;
 int dma_finish1 = 0;
 int dma_finish2 = 0;
 
-int adc_mode=0;
+int adc_mode=1;
 int adc_count=0;
 
 int HUL_ADC_clk_enable(ADC_TypeDef *adc);
@@ -197,103 +197,152 @@ int HUL_DMA_nvic(ADC_TypeDef *adc, int enable) {
 #endif
 }
 
+/**
+* @brief ADC MSP Initialization
+* This function configures the hardware resources used in this example
+* @param hadc: ADC handle pointer
+* @retval None
+*/
+void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  if(hadc->Instance==ADC1)
+  {
+  /* USER CODE BEGIN ADC1_MspInit 0 */
+
+  /* USER CODE END ADC1_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_ADC1_CLK_ENABLE();
+
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    /**ADC1 GPIO Configuration
+    PA0-WKUP     ------> ADC1_IN0
+    PA1     ------> ADC1_IN1
+    PA2     ------> ADC1_IN2
+    PA3     ------> ADC1_IN3
+    PA4     ------> ADC1_IN4
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
+                          |GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /* ADC1 DMA Init */
+    /* ADC1 Init */
+    hdma_adc1.Instance = DMA1_Channel1;
+    hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+    hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+    hdma_adc1.Init.Mode = DMA_CIRCULAR;
+    hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    __HAL_LINKDMA(hadc,DMA_Handle,hdma_adc1);
+
+    /* ADC1 interrupt Init */
+    HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
+  /* USER CODE BEGIN ADC1_MspInit 1 */
+
+  /* USER CODE END ADC1_MspInit 1 */
+  }
+
+}
+
+
+/**
+* @brief ADC MSP De-Initialization
+* This function freeze the hardware resources used in this example
+* @param hadc: ADC handle pointer
+* @retval None
+*/
+void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
+{
+  if(hadc->Instance==ADC1)
+  {
+  /* USER CODE BEGIN ADC1_MspDeInit 0 */
+
+  /* USER CODE END ADC1_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_ADC1_CLK_DISABLE();
+
+    /**ADC1 GPIO Configuration
+    PA0-WKUP     ------> ADC1_IN0
+    PA1     ------> ADC1_IN1
+    PA2     ------> ADC1_IN2
+    PA3     ------> ADC1_IN3
+    PA4     ------> ADC1_IN4
+    */
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
+                          |GPIO_PIN_4);
+
+    /* ADC1 DMA DeInit */
+    HAL_DMA_DeInit(hadc->DMA_Handle);
+
+    /* ADC1 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(ADC1_2_IRQn);
+  /* USER CODE BEGIN ADC1_MspDeInit 1 */
+
+  /* USER CODE END ADC1_MspDeInit 1 */
+  }
+
+}
 
 // multichannel, use dma, scan mode, not continuous, one adc
 
-class gadc {
-private:
-protected:
-  ADC_HandleTypeDef *_ha; // ->Instance (ADC_TypeDef *adc);
-  DMA_HandleTypeDef *_hd; //
-
-  ADC_ChannelConfTypeDef _ac;
-  struct adc_channels *_chs;  
-  uint16_t _mode;
-  int _status; 
-  uint16_t _timeout;
-
-  uint16_t *_dmabuf;
-  
-  int add_channel(adc_channels *ac); // return channels;
-  int add_channel(uint32_t ch, uint32_t samplerate=ADC_SAMPLETIME_41CYCLES_5); // Vref, temp, ADC_SAMPLETIME_2CYCLE_5
-public:
-  int _channel_num;
-
-public:
-  gadc();
-  gadc(ADC_TypeDef *adc, struct adc_channels *ac);
-  //gadc(ADC_TypeDef *adc, int ch, GPIO_TypeDef *port, int pin);
-  virtual ~gadc(){};
-  
-  void setup(ADC_TypeDef *adc, struct adc_channels *ac);
-  void setup();
-  //static void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *);
-
-  bool isready() { return (_status != eADC_NOTSETUP);}
-  int channel_num() { return _channel_num; };
-  uint16_t& mode() { return _mode; }
-  ADC_HandleTypeDef *get_handle() { return _ha; }
-
-  int start();
-  int stop();
-
-  int read();
-  int read(uint16_t *buf); // buf length = chs
-};
-
 // ---------------------------------------------------------------------------------
 gadc::gadc() { //LSE_STARTUP_TIMEOUT
+  _status = eADC_NOTSETUP;
   _channel_num = 0;
   _timeout = 1; // ms
-  _status = eADC_NOTSETUP; // -1
-  _mode = eADC_POLLING; // 0       (_mode & 0x7)
+  _mode = 1; // continuous
 }
 
 //#include <stm32f4xx_hal.h>
 
 gadc::gadc(ADC_TypeDef *adc, struct adc_channels *ac) {
-  if(adc == ADC1) {
-    _ha = &hadc1;
-  } else {
-  //if(adc == ADC2) {
-    return;
-    //_ha = &hadc2;
-  }
-  _channel_num = 0;
-  _timeout = 100; // ms
-  _status = eADC_NOTSETUP; // -1
-  _mode = eADC_POLLING; // 0       (_mode & 0x7)
-
-//  setup(adc, ac);
-}
-
-void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
-  _status = -1;
-  if(adc == ADC1) {
-    _ha = &hadc1;
-  } else {
-  //if(adc == ADC2) {
-    return;
-    //_ha = &hadc2;
-  }
-  HUL_ADC_clk_enable(_ha->Instance);
+  _status = eADC_NOTSETUP;
+  _chs = ac;
+  _ha = (adc == ADC1)? &hadc1 : (adc == ADC2)? &hadc2: 0;
+  if( !_ha ) return;
 
   _ha->Instance = adc;
   _channel_num = 0;
   _timeout = 1; // ms
-  _status = 0;
- 
-  int chs = 0;
-  for(; (ac+chs)->ch != -1 ; chs++);
-  
-  _ha->Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  _ha->Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  _ha->Init.NbrOfConversion = chs;                   // <> _channel_num
-  _ha->Init.DiscontinuousConvMode = DISABLE;
-  _ha->Init.ScanConvMode = ENABLE;
-  _ha->Init.ContinuousConvMode = DISABLE; //ENABLE;
 
-  HUL_ADC_clk_enable(adc);
+  setup();
+}
+
+void gadc::setup() {
+  if( _ha && _chs ) this->setup( _ha->Instance, _chs);
+}
+
+void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
+  _status = eADC_NOTSETUP;
+  _chs = ac;
+  _ha = (adc == ADC1)? &hadc1 : (adc == ADC2)? &hadc2: 0;
+  if( !_ha ) return;
+
+  _ha->Instance = adc;
+  _channel_num = 0;
+  _timeout = 1; // ms
+ 
+  int channel_cnt = 0;
+  for(; (ac+channel_cnt)->ch != -1 ; channel_cnt++);
+  
+  _ha->Init.ScanConvMode = ENABLE;
+  _ha->Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  _ha->Init.ContinuousConvMode = DISABLE; //ENABLE;
+  _ha->Init.DiscontinuousConvMode = DISABLE;
+  _ha->Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  _ha->Init.NbrOfConversion = channel_cnt;                   // <> _channel_num
+
+  HUL_ADC_clk_enable(_ha->Instance);
 
 // multi, continues, use dma
 #if defined(STM32F4) || defined(STM32F7)
@@ -309,25 +358,25 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
 #endif //STM32F4
 
   if (HAL_ADC_Init(_ha) != HAL_OK) {// --> call HAL_ADC_MspInit()
-      ERROR_LOG(""); //Error_Handler();
+      ERROR_LOG("adc init fail"); //Error_Handler();
   }
 
-  _chs = ac;
 
   for(int i=0; i < _ha->Init.NbrOfConversion; i++) {
-    add_channel(ac+i);
+    add_channel(_chs+i);
   }
 
   if( !_dmabuf ) {
     _dmabuf = new uint16_t[channel_num()*2];
+    _outbuf = new uint16_t[channel_num()*2];
   }
 #if 1  // F1
-
     __HAL_RCC_DMA1_CLK_ENABLE();
 
     HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
+// --- ~MspInit()
     _hd->Instance = DMA1_Channel1;
     _hd->Init.Direction = DMA_PERIPH_TO_MEMORY;
     _hd->Init.PeriphInc = DMA_PINC_DISABLE;
@@ -336,9 +385,8 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
     _hd->Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
     _hd->Init.Mode = DMA_CIRCULAR;
     _hd->Init.Priority = DMA_PRIORITY_LOW;
-    if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
-    {
-      ERROR_LOG(""); //Error_Handler();
+    if (HAL_DMA_Init(&hdma_adc1) != HAL_OK) {
+      ERROR_LOG("dma init fail"); //Error_Handler();
     }
 
 #else  // F4
@@ -367,7 +415,8 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
 
   __HAL_LINKDMA((_ha),DMA_Handle,hdma_adc1);
 
-  HUL_ADC_nvic(adc, 1);
+  HUL_ADC_nvic(_ha->Instance, 1);
+
 
   if(HAL_ADC_Start_DMA(_ha, (uint32_t*)_dmabuf, channel_num()) != HAL_OK) {
     ERROR_LOG("adc start dma nok"); //Error_Handler();

@@ -48,7 +48,7 @@ typedef struct {
 	char pname[MAX_PFN_NAME_LEN+1];
 } gpfn_t;
 
-int init_pfn();
+int init_proc();
 int add_pfn(int prot, void (*pfn)(), const char*pname=0,int act=1); // prot 0: any time any more
 
 #if (__RT_PROC__ != 0 )

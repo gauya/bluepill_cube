@@ -38,7 +38,7 @@ static uint16_t __restrict_time=0;
 extern "C" {
 #endif
 
-int init_pfn() {
+int init_proc() {
 	for(int i=0;i<MAX_PFNS; i++) {
 		__stp.list[i] = 0;
 	}

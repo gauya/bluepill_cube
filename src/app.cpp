@@ -35,7 +35,7 @@ void test_adc_loop() {
   //HAL_ADC_Start_IT(&hadc1);
   //HAL_DMA_Start_IT(&hdma_adc1, (uint32_t)&hadc1.Instance->DR, (uint32_t)adc_buffer, DMA_BUFFER_SIZE);  
 //    HAL_DMA_Start(&hdma_adc1,(uint32_t)adc_buffer, (uint32_t)&ADC1->DR, DMA_BUFFER_SIZE);
-//  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
 //  HAL_ADC_Start(&hadc1);
 //      ADC1->CR2 |= ADC_CR2_SWSTART;
   while(1) {
@@ -324,7 +324,7 @@ void setup() {
   init_serial(115200);
 
   init_ticks(eTICK_VOL_100us);
-  init_pfn();
+  init_proc();
 
 // ---------------------------------------------------------
   log_level = 2;
@@ -332,14 +332,6 @@ void setup() {
   ERROR_LOG("start");
 
   gLED.init();
-
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
-
-//  test_adc_loop();
-#if 0
-#if 0
-  test_adc();
-#else
 
   adc_channels ac[] = {
     { ADC_CHANNEL_0, ADC_SAMPLETIME_55CYCLES_5,GPIOA, 0,},
@@ -352,16 +344,9 @@ void setup() {
     { -1,0 }
   };
 
-#if (ADC_TEST==1)  
-  adc.setup(ADC1,ac,0,0);
-  //adc.setup(ADC1,ac,0,0);
-  adc.attach(adc_cb);
-  adc.start();
-#else
-//    adc.setup(ADC1,ac);
-#endif
-#endif
-#endif
+
+  //gadc adc(ADC1, ac);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
 
   //gt = new gtimer(TIM3,1,7000,timer_func);
   //gt->start();

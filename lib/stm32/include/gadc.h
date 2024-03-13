@@ -46,6 +46,48 @@ enum { // adc error
 
 };
 
+class gadc {
+private:
+protected:
+  ADC_HandleTypeDef *_ha; // ->Instance (ADC_TypeDef *adc);
+  DMA_HandleTypeDef *_hd; //
+
+  ADC_ChannelConfTypeDef _ac;
+  struct adc_channels *_chs;  
+  uint16_t _mode;
+  int _status; 
+  uint16_t _timeout;
+
+  uint16_t *_dmabuf;
+  uint16_t *_outbuf;
+  
+  int add_channel(adc_channels *ac); // return channels;
+  int add_channel(uint32_t ch, uint32_t samplerate=ADC_SAMPLETIME_41CYCLES_5); // Vref, temp, ADC_SAMPLETIME_2CYCLE_5
+public:
+  int _channel_num;
+
+public:
+  gadc();
+  gadc(ADC_TypeDef *adc, struct adc_channels *ac);
+  //gadc(ADC_TypeDef *adc, int ch, GPIO_TypeDef *port, int pin);
+  virtual ~gadc(){};
+  
+  void setup(ADC_TypeDef *adc, struct adc_channels *ac);
+  void setup();
+  //static void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *);
+
+  bool isready() { return (_status != eADC_NOTSETUP);}
+  int channel_num() { return _channel_num; };
+  uint16_t& mode() { return _mode; }
+  ADC_HandleTypeDef *get_handle() { return _ha; }
+
+  int start();
+  int stop();
+
+  int read();
+  int read(uint16_t *buf); // buf length = chs
+};
+
 class stm32adc {
 private:
 protected:
