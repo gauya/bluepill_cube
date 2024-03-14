@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-static eTick_vol __tick_vol = eTICK_VOL_100us;
+static eTick_vol __tick_vol = eTICK_VOL_10us;
 static uint32_t __usec_per_tick;
 static uint32_t __usec_max;
 static double __ticks_per_usec;

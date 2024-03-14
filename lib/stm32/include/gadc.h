@@ -63,8 +63,10 @@ protected:
   
   int add_channel(adc_channels *ac); // return channels;
   int add_channel(uint32_t ch, uint32_t samplerate=ADC_SAMPLETIME_41CYCLES_5); // Vref, temp, ADC_SAMPLETIME_2CYCLE_5
+
 public:
   int _channel_num;
+  int _data_ready;   // read()
 
 public:
   gadc();
@@ -77,18 +79,17 @@ public:
   //static void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *);
 
   bool isready() { return (_status != eADC_NOTSETUP);}
+  bool isindata() { return _data_ready; }
   int channel_num() { return _channel_num; };
   uint16_t& mode() { return _mode; }
   ADC_HandleTypeDef *get_handle() { return _ha; }
   int status() { return _status; }
-
+  void safedata();
+  
   int start();
   int stop();
 
-//  void attach( void (*intrf)() );
-//  void detach();
-
-  int read();
+  int read(int ch=0);
   int read(uint16_t *buf); // buf length = chs
 };
 

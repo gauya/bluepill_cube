@@ -21,6 +21,12 @@ void loop_led() {
   gdebug(5,"[%d]\n",cnt++);
 }
 
+
+__IO int timer_cnt=0;
+void timer_func(TIM_HandleTypeDef *h) {
+  timer_cnt++;
+}
+
 extern ADC_HandleTypeDef hadc1;
 extern DMA_HandleTypeDef hdma_adc1;
 extern int adc_completed;
@@ -49,8 +55,8 @@ void test_adc_loop() {
       for( int i=0;i < DMA_BUFFER_SIZE; i++ ) {
         gdebug(2,"%5d ",adc_buffer[i]);
       }
-      gdebug(2, " (%d,%d,%d)\n",adc_completed,dma_finish1,dma_finish2);
-      adc_completed = dma_finish1 = dma_finish2 = 0;
+      gdebug(2, " (%d,%d,%d) %d\n",adc_completed,dma_finish1,dma_finish2, timer_cnt);
+      adc_completed = dma_finish1 = dma_finish2 = timer_cnt = 0;
 //  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
       HAL_Delay(100);
     }
@@ -71,8 +77,8 @@ void test_adc() {
       float temperature = (adc_buffer[0] / 4095.0) * 3.3;
 //      float temperature = (adc_buffer[0] * 4095.0) / 3.3;
             temperature = (temperature - 1.43) / 0.0043 + 25.0;
-      gdebug(2, " (%d,%d,%d %.3fC)\n",adc_completed,dma_finish1,dma_finish2, temperature);
-      adc_completed = dma_finish1 = dma_finish2 = 0;
+      gdebug(2, " (%d,%d,%d  (%d) %.3fC)\n",adc_completed,dma_finish1,dma_finish2, timer_cnt, temperature);
+      adc_completed = dma_finish1 = dma_finish2 = timer_cnt = 0;
   }
 }
 
@@ -89,11 +95,6 @@ void test2() {
   m = d % 60; d /= 60;
   h = d % 24; d /= 24;
   gdebug(2,"test2 cnt = %d : elapsed %ld sec %d.%d.%d.%d]\n",c++, t,d, h,m,s);
-}
-
-__IO int timer_cnt=0;
-void timer_func(TIM_HandleTypeDef *h) {
-  timer_cnt++;
 }
 
 gcavg avg();  // <-----------
@@ -318,7 +319,7 @@ void cli_test2(const char*s) {
 }
 
 extern UART_HandleTypeDef huart1;
-
+extern gadc __adc1;
 
 void setup() {
   init_serial(115200);
@@ -344,12 +345,13 @@ void setup() {
     { -1,0 }
   };
 
+//  __adc1.setup(ADC1,ac);
 
   //gadc adc(ADC1, ac);
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
 
-  //gt = new gtimer(TIM3,1,7000,timer_func);
-  //gt->start();
+  gt = new gtimer(TIM3,1,7000,timer_func);
+  gt->start();
 
   set_tty_func("ps",ps );
   set_tty_func("time",cli_test2);

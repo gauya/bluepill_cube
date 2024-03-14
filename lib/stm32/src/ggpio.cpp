@@ -383,6 +383,9 @@ void gwgpio::init() {
         case eGPIO_OUTOD:
             mode = GPIO_MODE_OUTPUT_OD;
             break;
+        case eGPIO_AFPP:
+            mode = GPIO_MODE_AF_PP;
+            break;
         case eGPIO_INPUT:
             mode = GPIO_MODE_INPUT;
             break;

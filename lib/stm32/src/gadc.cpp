@@ -8,15 +8,16 @@ extern "C" {
 DMA_HandleTypeDef hdma_adc1,hdma_adc2;
 ADC_HandleTypeDef hadc1,hadc2;
 
-extern uint16_t *adc_buffer;
-void (*_stm32adc_callback)() = 0;
-
 int adc_completed = 0;
+
+#if 1  // debugging
 int dma_finish1 = 0;
 int dma_finish2 = 0;
-
+extern uint16_t *adc_buffer;
+void (*_stm32adc_callback)() = 0;
 int adc_mode=1;
 int adc_count=0;
+#endif
 
 gadc __adc1;
 
@@ -28,10 +29,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   if( _stm32adc_callback ) {
     _stm32adc_callback();
   }
-  if(__adc1.status() == -1) {
-    //
-  }
+  __adc1.safedata();
   adc_completed++;
+  
   if( adc_mode == 1) {
 
   } else {
@@ -303,8 +303,15 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 // ---------------------------------------------------------------------------------
 gadc::gadc() { //LSE_STARTUP_TIMEOUT
   _status = eADC_NOTSETUP;
+  _chs = 0;
+  _ha = 0;
+  _hd = 0;
   _channel_num = 0;
   _timeout = 1; // ms
+  _dmabuf = _outbuf = 0;
+  _data_ready = 0;
+  _mode = 0;
+
   _mode = 1; // continuous
 }
 
@@ -315,10 +322,14 @@ gadc::gadc(ADC_TypeDef *adc, struct adc_channels *ac) {
   _chs = ac;
   _ha = (adc == ADC1)? &hadc1 : (adc == ADC2)? &hadc2: 0;
   if( !_ha ) return;
+  _hd = (adc == ADC1)? &hdma_adc1 : (adc == ADC2)? &hdma_adc2: 0;
 
   _ha->Instance = adc;
   _channel_num = 0;
   _timeout = 1; // ms
+  _dmabuf = _outbuf = 0;
+  _data_ready = 0;
+  _mode = 0;
 
   setup();
 }
@@ -328,24 +339,39 @@ gadc::~gadc() {
   // nvic off
   HAL_DMA_DeInit(_ha->DMA_Handle);
   HAL_NVIC_DisableIRQ(ADC1_2_IRQn);
-  __HAL_RCC_ADC1_CLK_DISABLE();
+
+  if( _ha->Instance == ADC1) {
+    __HAL_RCC_ADC1_CLK_DISABLE();
+    __HAL_RCC_DMA1_CLK_DISABLE();
+  } else
+  if( _ha->Instance == ADC2) {
+    __HAL_RCC_ADC2_CLK_DISABLE();
+    __HAL_RCC_DMA1_CLK_DISABLE();
+  } else {
+  }
 
   if( _dmabuf ) {
     delete[] _dmabuf;
     delete[] _outbuf;
+    _dmabuf = _outbuf = 0;
   }
-//  detach();
+  _status = eADC_NOTSETUP;
 }
 
 void gadc::setup() {
-  if( _ha && _chs ) this->setup( _ha->Instance, _chs);
+  if( _ha && _chs ) {
+    this->setup( _ha->Instance, _chs);
+  }
 }
 
 void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
   _status = eADC_NOTSETUP;
   _chs = ac;
   _ha = (adc == ADC1)? &hadc1 : (adc == ADC2)? &hadc2: 0;
-  if( !_ha ) return;
+  if( !_ha ) {
+    ERROR_LOG("gadc setup");
+    return;
+  }
 
   _ha->Instance = adc;
   _channel_num = 0;
@@ -396,6 +422,12 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
     HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 // --- ~MspInit()
+    
+    _hd = (_ha->Instance == ADC1)? &hdma_adc1 : (_ha->Instance == ADC2)? &hdma_adc2 : 0;
+    if( !_hd ) {
+      ERROR_LOG("");
+      return;
+    }
     _hd->Instance = DMA1_Channel1;
     _hd->Init.Direction = DMA_PERIPH_TO_MEMORY;
     _hd->Init.PeriphInc = DMA_PINC_DISABLE;
@@ -404,7 +436,7 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
     _hd->Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
     _hd->Init.Mode = DMA_CIRCULAR;
     _hd->Init.Priority = DMA_PRIORITY_LOW;
-    if (HAL_DMA_Init(&hdma_adc1) != HAL_OK) {
+    if (HAL_DMA_Init(_hd) != HAL_OK) {
       ERROR_LOG("dma init fail"); //Error_Handler();
     }
 
@@ -432,7 +464,12 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
 
 #endif  
 
-  __HAL_LINKDMA((_ha),DMA_Handle,hdma_adc1);
+  if( _ha->Instance == ADC1 ) {
+    __HAL_LINKDMA((_ha),DMA_Handle,hdma_adc1);
+  } else 
+  if( _ha->Instance == ADC2 ) {
+    __HAL_LINKDMA((_ha),DMA_Handle,hdma_adc2);
+  } else 
 
   HUL_ADC_nvic(_ha->Instance, 1);
 
@@ -506,35 +543,28 @@ int gadc::stop() {
   return -1;
 }
 
-int gadc::read() {
-  if( ! isready() ) { 
+void gadc::safedata() {
+  if( !_dmabuf ) return;
+
+  memmove(_outbuf, _dmabuf, channel_num() * sizeof(_outbuf[0]));
+  _data_ready = 1;
+}
+
+int gadc::read(int ch) {
+  if( !_outbuf ) { 
     return (-1);
   }
-#if 0
-  _converted = 0;
-  HAL_ADC_Start(_ha);
-
-  while( _converted == 0 ) {
-    delay_us(_timeout);
-  };
-#endif
+  return _outbuf[ch];
 }
 
 int gadc::read(uint16_t *buf) {
-
-  int i = 0;
-  for(; i < _channel_num; i++ ) {
-    if(HAL_ADC_PollForConversion(_ha, 1) != HAL_OK) {
-    ERROR_LOG(""); //Error_Handler();
-    }
-    
-    uint32_t v = HAL_ADC_GetValue(_ha);  // get adc value
-    buf[i] = (uint16_t)(v & 0x0fffU);
+  if( !_data_ready || !buf ) {
+    return -1;
   }
+  memmove(buf, _outbuf, sizeof(_outbuf[0]) * channel_num());
 
-  stop();
-
-  return i;
+  _data_ready = 0;
+  return channel_num();
 }
 // -----------------------------------------------------------------------------------------------
 

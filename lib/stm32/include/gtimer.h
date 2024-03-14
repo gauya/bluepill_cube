@@ -25,26 +25,25 @@ protected:
     union {
         uint16_t _mode;
         struct {
-            uint16_t _inited:1;
-            uint16_t _int:1;
-            uint16_t _dma:1;
-            uint16_t _ch1:1;
-            uint16_t _ch2:1;
-            uint16_t _ch3:1;
-            uint16_t _ch4:1;
+            uint16_t _inited:1; // setup 
+            uint16_t _int:1; // interrupt
+            uint16_t _dma:1; // use dma
+            uint16_t _ch1:2; // channel PWM:1, INPUT:2
+            uint16_t _ch2:2; // 
+            uint16_t _ch3:2;
+            uint16_t _ch4:2;
             uint16_t _ovf:1;    // ovf, cmp
             uint16_t _opm:1;
             uint16_t _down:1;   // 0: up, 
         };
     };
-    TIM_HandleTypeDef _ht;
+    TIM_HandleTypeDef *_ht;
 public:
     gtimer();
-    gtimer(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, void (*f)(TIM_HandleTypeDef *) = 0); // mode = 1 interrupt
-    gtimer(TIM_TypeDef *TIMx, uint32_t period, void (*f)(TIM_HandleTypeDef *) = 0); // mode = 1 interrupt
+    gtimer(TIM_TypeDef *TIMx, uint32_t ARR, uint32_t PSC=0, void (*f)(TIM_HandleTypeDef *) = 0); // mode = 1 interrupt
     ~gtimer();
 
-    void set(TIM_TypeDef *TIMx, uint32_t PSC, uint32_t ARR, void (*f)(TIM_HandleTypeDef *) = 0);
+    void set(TIM_TypeDef *TIMx, uint32_t ARR, uint32_t PSC=0, void (*f)(TIM_HandleTypeDef *) = 0);
     void start();
     void stop();
 
