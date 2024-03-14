@@ -352,6 +352,9 @@ void setup() {
 
   gt = new gtimer(TIM3,1,7000,timer_func);
   gt->start();
+  gpio_t pwmg1 = {GPIOB,3};
+  gt->pwm(2,1000,TIM_OCMODE_PWM1,&pwmg1);
+  gt->pwm_start(2);
 
   set_tty_func("ps",ps );
   set_tty_func("time",cli_test2);

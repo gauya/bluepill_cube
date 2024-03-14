@@ -48,6 +48,7 @@ public:
     void stop();
 
     void pwm(int channel, uint32_t pulse, uint32_t mode=TIM_OCMODE_PWM1,gpio_t *g=0); // mode=TIM_OCMODE_INACTIVE,TIM_OCMODE_FROZEN, TIM_OCMODE_TIMING,PWM1,PWM2, ... pulse : CCR, channel=0~3
+    void pwm_start(int channel);
     void pwm_stop(int channel);
 
     uint32_t psc(int v= -1);
