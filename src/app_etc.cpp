@@ -112,7 +112,7 @@ int tty_prev_func(int c) {
 
 
 
-uint32_t factorial(uint32_t num) {
+static uint32_t factorial(uint32_t num) {
 	uint32_t v=num;
 	for(int i=num-1; i > 0 ; i--) {	v += i; }
 	return v;
