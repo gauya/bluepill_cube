@@ -14,7 +14,6 @@
 #include "glog.h"
 #include "gtty.h"
 #include "gproc.h"
-#include <gtick_stm32_hal.h>
 #include "gtick.h"
 #include "gutils.h"
 #include "gprintf.h"

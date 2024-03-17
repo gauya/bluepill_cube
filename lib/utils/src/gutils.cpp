@@ -166,8 +166,8 @@ uint32_t find_factor_1(uint32_t c, uint32_t *res) {
 	uint32_t m = 0x7fffffff;
 	uint32_t mx=0,my=0;
 
-	for(int i=1; i < 0xffff; i++) {
-		int k = c / i;
+	for(uint32_t i=1; i < 0xffff; i++) {
+		uint32_t k = c / i;
 		if( m > k ) {
 			m = c % k;
 			mx = i;

@@ -46,6 +46,28 @@
 extern "C" {
 #endif
 
+typedef union {
+	uint16_t wD;
+	struct {
+		uint16_t	BT0:1;
+		uint16_t	BT1:1;
+		uint16_t	BT2:1;
+		uint16_t	BT3:1;
+		uint16_t	BT4:1;
+		uint16_t	BT5:1;
+		uint16_t	BT6:1;
+		uint16_t	BT7:1;
+		uint16_t	BT8:1;
+		uint16_t	BT9:1;
+		uint16_t	BT10:1;
+		uint16_t	BT11:1;
+		uint16_t	BT12:1;
+		uint16_t	BT13:1;
+		uint16_t	BT14:1;
+		uint16_t	BT15:1;
+	};
+} u16bits_t;
+
 
 typedef union {
 	uint32_t wD;
@@ -83,7 +105,7 @@ typedef union {
 		uint32_t	BT30:1;
 		uint32_t	BT31:1;
 	};
-} w32bits_t;
+} u32bits_t;
 
 int bit_count(uint32_t word);
 

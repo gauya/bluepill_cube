@@ -1,11 +1,10 @@
 #include <gproc.h>
 #include <gtick.h>
-#include <gtick_stm32_hal.h>
 #include <glog.h>
 #include <gadc.h>
 #include <gtty.h>
 #include <stdio.h>
-#include "app_etc.h"
+#include <app_etc.h>
 #include <giwdg.h>
 #include <ggpio.h>
 #include <gtimer.h>

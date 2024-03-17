@@ -10,12 +10,20 @@
 
 #include <stdint.h>
 #include "gutils.h"
-#include "gtick_stm32_hal.h"
 
-#pragma once
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef enum  { // 1:1ms, 10:100us, 100:10us, 1000:1us
+	eTICK_VOL_1ms = 1,
+	eTICK_VOL_100us = 10,
+	eTICK_VOL_10us = 100,
+	eTICK_VOL_1us = 1000
+} eTick_vol;
+
+void init_ticks(eTick_vol);
+uint32_t get_utick();
 
 // must be recreate get_mtime() and get_utime()
 // __weak attribute is applied
