@@ -134,20 +134,6 @@ void gtimer::set(TIM_TypeDef *tim, uint32_t ARR, uint32_t PSC, void (*f)(TIM_Han
     if (HAL_TIM_ConfigClockSource(_ht, &sClockSourceConfig) != HAL_OK) {
         ERROR_LOG("timer config clock source");
     }
-#if 0
-    if (HAL_TIM_OC_Init(&htim2) != HAL_OK) {
-        ERROR_LOG("timer oc init");
-    }
-    if (HAL_TIM_PWM_Init(&htim2) != HAL_OK) {
-        ERROR_LOG("timer pwm init");
-    }
-#endif
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(_ht, &sMasterConfig) != HAL_OK) {
-        ERROR_LOG("timer MasterConfigSync");
-    }
 
     if (f) {
         _int = 1;
@@ -204,6 +190,22 @@ void gtimer::pwm(int channel, uint32_t pulse, uint32_t mode, gpio_t *gpio_ch) {
         HAL_GPIO_Init(gpio_ch->port, &gi);
     }
 
+//  __HAL_AFIO_REMAP_TIM2_PARTIAL_1();
+
+    if (HAL_TIM_OC_Init(_ht) != HAL_OK) {
+        Error_Handler();
+    }
+    if (HAL_TIM_PWM_Init(_ht) != HAL_OK) {
+        Error_Handler();
+    }
+
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(_ht, &sMasterConfig) != HAL_OK) {
+        ERROR_LOG("timer MasterConfigSync");
+    }
+
     TIM_OC_InitTypeDef sConfigOC;
 
 #if 0  
@@ -219,6 +221,10 @@ void gtimer::pwm(int channel, uint32_t pulse, uint32_t mode, gpio_t *gpio_ch) {
         ERROR_LOG("timer pwm");
     }
 #endif
+    if(channel==1) { _ch1 = 1;} else
+    if(channel==2) { _ch2 = 1;} else
+    if(channel==3) { _ch3 = 1;} else
+    if(channel==4) { _ch4 = 1;} 
 }
 
 void gtimer::pwm_start(int channel) {
@@ -230,8 +236,8 @@ void gtimer::pwm_start(int channel) {
                                                : (channel == 3)   ? TIM_CHANNEL_3
                                                                   : TIM_CHANNEL_4;
     HAL_TIM_PWM_Start(_ht, ch);
-
 }
+
 void gtimer::pwm_stop(int channel) {
     if (channel < 1 || channel > 4) {
         ERROR_LOG("pwm channel over range");

@@ -317,6 +317,7 @@ int cdc_putc(int ch) {
 	while( CDC_Transmit_FS((uint8_t*)&s->_tx_ch, 1) == USBD_BUSY) {
 		if(to_cnt++ > 100) return -1;
 	}
+	return ch;
 }
 
 int ggetc(int fd) {

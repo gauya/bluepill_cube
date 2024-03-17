@@ -1,16 +1,10 @@
-
-/*
- * gstr.h
- *
- *  Created on: Dec 14, 2021
- *      Author: seu
- */
-
-#ifndef GSTR_H_
-#define GSTR_H_
-
+#include <stdint.h>
 #include <string.h>
-#include <cstdint>
+#include <ctype.h>
+#include <stdio.h>
+
+#ifndef __GSTR_H__
+#define __GSTR_H__
 
 typedef enum {
 	eEND = 0,
@@ -79,59 +73,46 @@ typedef struct {
 extern "C" {
 #endif
 
-extern const char __default_white_space[];
-extern const char __default_delimiter[];
-
-void touppers(char *str) ;
-void tolowers(char *str) ;
+void touppers(char *str);
+void tolowers(char *str);
+int strchri(const char *s,int ch);
 const char* whitespace_skip(const char *b);
-const char *str_skip(const char *b,const char *s);
-int strchri(const char *s,int ch) ;
-int cmpstr(const char *s,const char *d) ;
-
-int instrs(const char *s,const char **dest) ;
-int stoi(const char *s) ;
-int64_t stol(const char *s) ;
-uint32_t stob(const char *s) ;
-uint32_t stoo(const char *s) ;
-uint32_t stox(const char *s) ;
-double stof(const char *s) ;
+const char *space_skip(const char *b,const char *s);
+int cmpstr(const char *s,const char *d);
+int instrs(const char *s,const char **dest);
+int stoi(const char *s);
+double stof(const char *s);
+int64_t stol(const char *s);
+int str2arr(char *msg, char **dest, size_t sz, const char *dil);
+int str2arri(const char *msg, int16_t *dest, size_t sz, const char *dil);
 char *strnzcpy(char *s1, const char *s2, size_t n);
-bool is_block_string(const char *str) ;
-int istoktype(const char *s) ;
-block_type_t *get_block_type(int idx) ;
 
-block_type_t *is_start_block(const char *str) ;
-block_type_t *is_end_block(const char *str) ;
-block_type_t *get_block_type(int) ;
-const char *gettoken(const char *s, char *buf,int dilimeter,const char *space) ;
-const char *get_token(const char *s, char *buf, size_t blen) ;
-block_info_t get_block(const char **str, char *buf, size_t bsize, int step) ;
-const char *next_token(const char *s, ptoken_t *p) ;
-// return token_type
-const char *get_parse(const char* s, char *buf, size_t blen,int step) ;
-int parse(const char *s,int step) ;
-
-/////////////////////////////////////////////////////////////////////////////////
+int chop_str(char *msg, char **dest, size_t num, const char *dil);
+int get_toktype(const char *);
+const char *get_parse(const char* s, char *buf, size_t blen,int step);
+const char *next_token(const char* s, ptoken_t *p);
+const char *lookup_rblock(const char *str, block_type_t *et);
+block_type_t *is_start_block(const char *str);
+int parse(const char *s,int step);
+int parse_block(block_type_t *bt, const char **str, char *buf, size_t bsize);
+block_info_t get_block(const char **s, char *buf, size_t bsize, int step);
 
 #ifdef __cplusplus
 }
 
-#include <stdexcept>
-using namespace std;
+block_type_t *get_blktype(const char *s);
+block_type_t *get_blktype(int idx);
+const char *get_token(const char *s, char *buf, size_t blen);
+const char *get_parse(const char *s, char *buf, size_t bsize, ptoken_t *ptoken=0);
 
 class gstr {
-private:
 	char *_str;
 	uint32_t _len;
 	uint32_t _bsize;
-
 public:
-	gstr();
-	gstr(const char *s);
-	gstr(gstr &g);
+	gstr(const char*s=0);
+	gstr(gstr &);
 	virtual ~gstr();
-
 	inline uint32_t len() const { return _len; };
 	operator const char*() const;
 	gstr& operator=(gstr &);
@@ -161,13 +142,6 @@ public:
 	gstr& upper();
 };
 
-class gtoken : public gstr {
-public:
-public:
-	gtoken();
-	gtoken(const char *str);
-	virtual ~gtoken();
-};
-
 #endif // __cplusplus
-#endif /* GSTR_H_ */
+
+#endif // __GSTR_H__

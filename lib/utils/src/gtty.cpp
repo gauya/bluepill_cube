@@ -72,9 +72,9 @@ static int default_inner_func(int c,const char *s) {
 		case eLOGLEVEL:
 			s = whitespace_skip(s);
 			if( !s )
-				lev = log_level;
+				lev = log_level();
 			else
-				lev = log_level = stoi(s);
+				lev = log_level() = stoi(s);
 			gdebug(-10,"log level is [%d]\n",lev);
 			break;
 		default:;

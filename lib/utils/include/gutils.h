@@ -25,6 +25,18 @@
 #define BIT(n) (1 << (n))
 #endif
 
+#ifndef BIT_ISTRUE
+#define BIT_ISTRUE(b,mask)  ((b) & (mask))
+#endif
+
+#ifndef BIT_SET
+#define BIT_SET(b,mask)     (b) |= (mask)
+#endif
+
+#ifndef BIT_RESET
+#define BIT_RESET(b,mask)   (b) &= ~(mask)
+#endif
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -71,7 +83,7 @@ typedef union {
 		uint32_t	BT30:1;
 		uint32_t	BT31:1;
 	};
-} w32BT_t;
+} w32bits_t;
 
 int bit_count(uint32_t word);
 

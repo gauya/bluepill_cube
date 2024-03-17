@@ -458,6 +458,7 @@ int gwgpio::read(int pin) {
     if(this->_mode == eGPIO_ADC) {
         // adc
     }
+    return -1;
 }
 
 int gwgpio::write(int pin, int val) {

@@ -5,6 +5,9 @@
  *      Author: seu
  */
 
+#ifndef __GLOG_H__
+#define __GLOG_H__
+
 #include <glog.h>
 
 #include <stdarg.h>
@@ -15,7 +18,8 @@
 extern "C" {
 #endif
 
-int log_level = 2;
+int _log_level = 2;
+
 
 #ifdef ARDUINO
 #include <Arduino.h>
@@ -45,7 +49,7 @@ int gputc(int ch) {
 
 #else
 void gdebug(int lev, const char* fmt, ...) {
-	if( lev > log_level ) return;
+	if( lev > log_level() ) return;
 
 	char buf[128];
 	va_list ap;
@@ -72,9 +76,14 @@ void error_log2( const char *msg, const char *file, const char *func, int line) 
 	gdebug(0, "[%s %s(%s):%d] %s\n", buf, file, func, line, msg);
 }
 
-
 #endif
 
 #ifdef __cplusplus
 }
 #endif
+
+int& log_level(int log) {
+	return _log_level;
+}
+
+#endif // __GLOG_H__

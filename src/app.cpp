@@ -264,8 +264,8 @@ void ps(const char *s) {
 }
 
 void strtest(const char*str, const char* ds, const char* ss) {
-  if(!ds) ds = __default_delimiter;
-  if(!ss) ss = __default_white_space;
+  if(!ds) ds = ",:\n \t/.;"; //__default_delimiter;
+  if(!ss) ss = " \t"; //__default_white_space;
   int dl=10;
 
   int token_cnt = 0;
@@ -328,7 +328,7 @@ void setup() {
   init_proc();
 
 // ---------------------------------------------------------
-  log_level = 2;
+  log_level(2);
   
   ERROR_LOG("start");
 
@@ -350,10 +350,10 @@ void setup() {
   //gadc adc(ADC1, ac);
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
 
-  gt = new gtimer(TIM3,1,7000,timer_func);
+  gt = new gtimer(TIM3,1,27000,timer_func);
   gt->start();
   gpio_t pwmg1 = {GPIOB,3};
-  gt->pwm(2,1000,TIM_OCMODE_PWM1,&pwmg1);
+  gt->pwm(2,10000,TIM_OCMODE_PWM1,&pwmg1);
   gt->pwm_start(2);
 
   set_tty_func("ps",ps );

@@ -5,6 +5,7 @@
  *      Author: seu
  */
 #include "app_etc.h"
+#include "gstr.h"
 
 int add_proc(const char*pn, void (*f)(const char*), int timer, int act) { // when act = 0 and timer >= 0, the processor starts in a stopped state.
 	int no;
@@ -107,6 +108,109 @@ int tty_direct_func(int ch) {
 int tty_prev_func(int c) {
 //	tty_func_key(c);
 	return 0;
+}
+
+
+
+uint32_t factorial(uint32_t num) {
+	uint32_t v=num;
+	for(int i=num-1; i > 0 ; i--) {	v += i; }
+	return v;
+}
+
+double tinycalc(const char *str) {
+	ptoken_t pt;
+	char buf[128];
+	char ops[8];
+
+	double vr=0., v=0.;
+
+	auto help = [] () {
+		gdebug(log_level(),"use operator, [+-*/%!^()]\n"); };
+
+	str = get_parse( str, buf, sizeof(buf)-1, &pt);
+	if(!str) return v;
+
+	if(pt.etype == eBLK && pt.subtype == eBLOCK) {
+		v = tinycalc(buf);
+	} else if(pt.etype == eNUM) {
+		v= stof(buf);
+	} else {
+		if( buf[0] == '-' && *str == 'h') help();
+		return v;
+	}
+
+	while(*str) {
+		str = get_parse( str, buf, sizeof(buf)-1, &pt);
+		if(pt.etype != eOP) {
+			if(pt.etype == eNUM) v += stof(buf);
+//			help();
+		}
+		if(!str) return v;
+
+		if(buf[0] == '!')
+			return factorial(v);
+		strcpy(ops,buf);
+
+		str = get_parse( str, buf, sizeof(buf)-1, &pt);
+		if(!str) break;
+
+		if(pt.etype == eBLK && pt.subtype == eBLOCK) {
+			vr = tinycalc(buf);
+		} else if(pt.etype == eNUM) {
+			vr = stof(buf);
+		} else {
+//			help();
+			return v;
+		}
+
+		switch(ops[0]) {
+		case '+':
+			v += vr;
+			break;
+		case '-':
+			v -= vr;
+			break;
+		case '*':
+			v *= vr;
+			break;
+		case '/':
+			v /= vr;
+			break;
+		case '^':
+			v = pow(v,vr);
+			break;
+		case '%':
+			v = (double)((uint32_t)v % (uint32_t)vr);
+			break;
+#if 0
+		case '&':
+			;
+			break;
+		case '|':
+			op = 10;
+			break;
+#endif
+		default:;
+		break;
+		}
+	}
+
+	return v;
+}
+
+#ifndef ISFLOAT
+#define ISFLOAT(v) (((v)-((int64_t)(v))) != 0.)
+#endif
+
+void dis_tinycalc(const char *str) {
+   double v = tinycalc(str);
+
+   if( ISFLOAT(v) ) {
+      gprintf("%s = %f\n", str, v);
+   } else {
+      gprintf("%s = %ld\n", str, (long)v);
+   }
 }
 
 

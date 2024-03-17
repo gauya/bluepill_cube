@@ -16,7 +16,6 @@
 extern "C" {
 #endif
 
-extern int log_level;
 void gdebug(int lev, const char* fmt, ...);
 
 #define ERROR_LOG(str) error_log(str, __FILE__, __FUNCTION__, __LINE__) 
@@ -36,4 +35,7 @@ int gputc(int ch);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+
+int& log_level(int log=-1);
+
 #endif /* GLOG_H_ */
