@@ -150,6 +150,62 @@ flash_map_inf_t fm256k128page = { 256,2,2,4,128,{128,0},{&_fm_2k,} };
 flash_map_inf_t fm1024k512page = { 1024,2,2,4,512,{512,0},{&_fm_2k,} };
 /////////////////////////////////////////////////////////////////////
 
+
+#if 0 // flash memory struct ,map
+
+BASE 0x0800 0000
+
+-- RM0468 Reference manual  stm32h723
+sector 8  128k
+
+-- RM0008  STM32F103xB
+page  32  1k	low-density devices
+page 128  1k    medium-density devices
+page 256  2k    high-density devices
+page 128  2k    connectivity line devices)
+page 512  2k    XL-density Flash module organization
+
+-- RM0383 stm32f411 
+sector 4  16k
+sector 1  64k
+sector 3 128k
+
+-- RM0090 STM32F405/415, STM32F407/417, STM32F427/437 STM32F429/439
+
+STM32F40x and STM32F41x - single bank
+sector 4  16k
+sector 1  64k
+sector 7 128k
+
+STM32F42xxx and STM32F43xxx - dual bank sector(0 ~ 23)
+bank1 sector 4  16k
+      sector 1  64k
+      sector 7 128k
+bank2 sector 4  16k
+      sector 1  64k
+      sector 3 128k
+
+(STM32F42xxx and STM32F43xxx) . STM32F72xxx and STM32F732xx/F733xx
+bank1 sector 4  16k
+      sector 1  64k
+      sector 7 128k
+bank2 sector 4  16k
+      sector 1  64k
+      sector 3 128k
+
+(STM32H750xB)
+bank1 128k
+
+(STM32H742xI/743xI/753xI devices)
+bank1 sector 8 128k
+bank2 sector 8 128k
+
+(STM32H742xG/743xG)
+bank1 sector 4 128k
+bank2 sector 4 128k
+
+#endif
+
 flash_map_inf_t *__default_flash_map_inf_t = &h7f_2m_s;  // 2Mbyte single mode
 
 // return bank (0 or 1) on success
