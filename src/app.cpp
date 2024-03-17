@@ -1,10 +1,6 @@
-#include <gproc.h>
-#include <gtick.h>
-#include <glog.h>
-#include <gadc.h>
-#include <gtty.h>
-#include <stdio.h>
+
 #include <app_etc.h>
+#include <gadc.h>
 #include <giwdg.h>
 #include <ggpio.h>
 #include <gtimer.h>

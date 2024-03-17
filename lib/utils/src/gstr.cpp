@@ -582,7 +582,6 @@ block_info_t get_block(const char **str, char *buf, size_t bsize, int step) {
 				// \n /* */
 			}
 		} else {
-printf("::::::::::::inner error:::::::::");				
 		}
 
 		(*str)++;
@@ -596,7 +595,7 @@ printf("::::::::::::inner error:::::::::");
 }
 
 // return next strp, throw away useless garbage.
-const char *get_parse(const char *s, char *buf, size_t bsize, ptoken_t *ptoken) {
+const char *get_parse_token(const char *s, char *buf, size_t bsize, ptoken_t *ptoken) {
 	if( !s || !buf || bsize < 2) return 0;
 
 	ptoken_t pt, *p;
@@ -1028,7 +1027,6 @@ int parse(const char *s,int step) {
 	while(*s) {
 		s = next_token(s, &pt);
 		if(!s) break;
-		printf("[%d|%d|%s(%d)]\n",step,pt.etype,pt.buf,pt.len);
 #if 0		
 		if(pt.etype == eBLK && pt.subtype == eBLOCK) {
 			bi = get_block(&s,pt.buf, pt.bsize, pt.step+1);
@@ -1040,7 +1038,6 @@ int parse(const char *s,int step) {
 		cnt++;
 	}
 
-	printf("(%d)total token = %lu blen=%u\n",pt.step,cnt,pt.bsize);
 	if(pt.bsize > 0) 
 		delete[](pt.buf);
 

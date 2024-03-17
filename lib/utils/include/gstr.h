@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdio.h>
 
 #ifndef __GSTR_H__
 #define __GSTR_H__
