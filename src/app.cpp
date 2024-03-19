@@ -343,6 +343,12 @@ void setup() {
 //  __adc1.setup(ADC1,ac);
 
   //gadc adc(ADC1, ac);
+  __disable_irq();
+  if( HAL_ADCEx_Calibration_Start(&hadc1) != HAL_OK ) {
+    ERROR_LOG("adc calibration fail");
+  }
+  __enable_irq();
+
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
 
   gt = new gtimer(TIM3,1,27000,timer_func);

@@ -406,8 +406,13 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
       ERROR_LOG("adc init fail"); //Error_Handler();
   }
 
+  __disable_irq();
+  if( HAL_ADCEx_Calibration_Start(_ha) != HAL_OK ) {
+      ERROR_LOG("adc cablbration fail"); 
+  }
+  __enable_irq();
 
-  for(int i=0; i < _ha->Init.NbrOfConversion; i++) {
+  for(uint8_t i=0; i < _ha->Init.NbrOfConversion; i++) {
     add_channel(_chs+i);
   }
 
@@ -677,7 +682,7 @@ void stm32adc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
 
   _chs = ac;
 
-  for(int i=0; i < _ha->Init.NbrOfConversion; i++) {
+  for(uint8_t i=0; i < _ha->Init.NbrOfConversion; i++) {
     add_channel(ac+i);
   }
 
