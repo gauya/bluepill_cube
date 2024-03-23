@@ -360,7 +360,7 @@ int flash_write(uint32_t addr, uint32_t *data, size_t len) {
 }
 #endif
 
-int flash_read(uint32_t addr, uint32_t *data, uint32_t len) {
+int flash_read(uint32_t addr, uint32_t *data, size_t len) {
 	HAL_FLASH_Unlock();
 	for(uint32_t i=0;i<len; i+=4) {
 		*data++ = *(__IO uint32_t*)addr;
@@ -371,3 +371,23 @@ int flash_read(uint32_t addr, uint32_t *data, uint32_t len) {
 	return len;
 }
 
+
+void flash_test() {
+	uint32_t saddr = 0x8000000 + 1024 * 60; // 60k~
+
+	struct test {
+		uint8_t ver;
+		uint32_t addr;
+		char name[16];
+		int flag;
+	} test = { 32, saddr, "I am a boy", 2024 };
+
+	struct test test2;
+
+	int i1 = flash_write(saddr, (uint32_t*)&test, sizeof(struct test));
+	int i2 = flash_read(saddr, (uint32_t*)&test2, sizeof(struct test));
+
+	gdebug(2,"flash test %d, %d\n",i1,i2);
+
+	gdebug(2,"--==> %u,%lx, %s, %d\n", test2.ver, test2.addr, test2.name, test2.flag);
+}

@@ -16,11 +16,33 @@ void loop_led() {
   gdebug(5,"[%d]\n",cnt++);
 }
 
+void flash_test();
 
 __IO int timer_cnt=0;
 void timer_func(TIM_HandleTypeDef *h) {
   timer_cnt++;
 }
+
+
+// ADC_TEST=1 : dma, else : polling
+#define ADC_TEST  1
+
+#if 0 // blackpill
+#define VREFINT 1.21
+#define REFVOL 3.3  // typical voltage
+#define ADCMAX 4095.0
+#define V25 0.76        // Voltage at 25C
+#define AVG_SLOPE 0.0025 // 2.5mV/C
+
+#else // bluepill startup 4~10us, sampling 17~ us
+
+#define VREFINT 1.20
+#define REFVOL 3.3  // typical voltage
+#define ADCMAX 4095.0
+#define V25 1.43        // Voltage at 25C
+#define AVG_SLOPE 0.0043 // 4.3mV/C
+#endif
+
 
 extern ADC_HandleTypeDef hadc1;
 extern DMA_HandleTypeDef hdma_adc1;
@@ -71,7 +93,7 @@ void test_adc() {
       }
       float temperature = (adc_buffer[0] / 4095.0) * 3.3;
 //      float temperature = (adc_buffer[0] * 4095.0) / 3.3;
-            temperature = (temperature - 1.43) / 0.0043 + 25.0;
+            temperature = (temperature - V25) / AVG_SLOPE + 25.0;
       gdebug(2, " (%d,%d,%d  (%d) %.3fC)\n",adc_completed,dma_finish1,dma_finish2, timer_cnt, temperature);
       adc_completed = dma_finish1 = dma_finish2 = timer_cnt = 0;
   }
@@ -94,26 +116,6 @@ void test2() {
 
 gcavg avg();  // <-----------
 gtimer *gt=0;
-
-
-// ADC_TEST=1 : dma, else : polling
-#define ADC_TEST  1
-
-#if 0 // blackpill
-#define VREFINT 1.21
-#define REFVOL 3.3  // typical voltage
-#define ADCMAX 4095.0
-#define V25 0.76        // Voltage at 25C
-#define AVG_SLOPE 0.0025 // 2.5mV/C
-
-#else // bluepill startup 4~10us, sampling 17~ us
-
-#define VREFINT 1.20
-#define REFVOL 3.3  // typical voltage
-#define ADCMAX 4095.0
-#define V25 1.43        // Voltage at 25C
-#define AVG_SLOPE 0.0043 // 4.3mV/C
-#endif
 
 
 void adc_temp_vref(uint16_t t, uint16_t v) {
@@ -328,6 +330,8 @@ void setup() {
   ERROR_LOG("start");
 
   gLED.init();
+
+  flash_test();
 
   adc_channels ac[] = {
     { ADC_CHANNEL_0, ADC_SAMPLETIME_55CYCLES_5,GPIOA, 0,},
