@@ -54,11 +54,7 @@ public:
     uint32_t psc(int v= -1);
     uint32_t arr(int v= -1);
     uint32_t cnt(int v= -1);
-
-    uint32_t ccr1(int v= -1);
-    uint32_t ccr2(int v= -1);
-    uint32_t ccr3(int v= -1);
-    uint32_t ccr4(int v= -1);
+    int ccr(int ch, int v=-1);
 
     void attach( void (*fi)(TIM_HandleTypeDef*) );
     void detach();

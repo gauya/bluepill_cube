@@ -346,8 +346,6 @@ int flash_write(uint32_t addr, uint32_t *data, size_t len) {
     HAL_FLASH_Unlock();
 
     for( size_t i=0; i < len; i += 2, addr += 2 ) {
-        // *(__IO uint16_t*)Address = *dp++;
-        //FLASH_Program_HalfWord(addr, *dp++);
         if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD, addr, *dp++ ) != HAL_OK) {
             HAL_FLASH_Lock();
         return -1;
@@ -371,7 +369,7 @@ int flash_read(uint32_t addr, uint32_t *data, size_t len) {
 	return len;
 }
 
-
+#ifdef TEST
 void flash_test() {
 	uint32_t saddr = 0x8000000 + 1024 * 60; // 60k~
 
@@ -391,3 +389,5 @@ void flash_test() {
 
 	gdebug(2,"--==> %u,%lx, %s, %d\n", test2.ver, test2.addr, test2.name, test2.flag);
 }
+
+#endif

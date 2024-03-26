@@ -170,7 +170,7 @@ void DebugMon_Handler(void)
 /**
   * @brief This function handles Pendable request for system service.
   */
-void PendSV_Handler(void)
+void _PendSV_Handler(void)
 {
   /* USER CODE BEGIN PendSV_IRQn 0 */
 

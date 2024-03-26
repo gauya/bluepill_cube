@@ -202,6 +202,7 @@ int HUL_DMA_nvic(ADC_TypeDef *adc, int enable) {
 #endif
 }
 
+#if 1 //ADCTEST
 /**
 * @brief ADC MSP Initialization
 * This function configures the hardware resources used in this example
@@ -298,6 +299,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 
 }
 
+#endif
 // multichannel, use dma, scan mode, not continuous, one adc
 
 // ---------------------------------------------------------------------------------

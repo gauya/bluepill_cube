@@ -5,7 +5,7 @@
 #include <setjmp.h>
 #include "glog.h"
 
-#if 0
+#if 1
 // PendSV 인터럽트 발생 플래그
 volatile bool pendSV_flag = false;
 
@@ -73,7 +73,7 @@ void task1(void) {
 }
 
 // Main 함수
-int aaapendsv(void) {
+void  pendmain(void) {
   // PendSV 인터럽트 활성화
   NVIC_SetPriority(PendSV_IRQn, 0);
   NVIC_EnableIRQ(PendSV_IRQn);
@@ -87,6 +87,8 @@ int aaapendsv(void) {
   }
 }
 
+#else
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -98,6 +100,7 @@ typedef struct {
   void (*task)(void);
   int *stack;
   int stack_top;
+  jmp_buf env;
 } Task;
 
 // 현재 실행 중인 Task
@@ -125,6 +128,8 @@ void PendSV_Handler(void) {
 void task1(void) {
   while (true) {
     // Task1 코드
+    gdebug(2,"task 1 \n");
+    //HAL_Delay(300);
     // ...
     
     // PendSV 인터럽트 발생 요청
@@ -136,6 +141,8 @@ void task1(void) {
 void task2(void) {
   while (true) {
     // Task2 코드
+    gdebug(2,"task 2 \n");
+    //HAL_Delay(300);
     // ...
     
     // PendSV 인터럽트 발생 요청
@@ -145,8 +152,8 @@ void task2(void) {
 
 void pendmain(void) {
   // Task 스택 초기화
-  tasks[0].stack = (uint32_t *)malloc(STACK_SIZE);
-  tasks[1].stack = (uint32_t *)malloc(STACK_SIZE);
+  tasks[0].stack = (int *)malloc(STACK_SIZE);
+  tasks[1].stack = (int *)malloc(STACK_SIZE);
 
   // Task 초기화
   tasks[0].task = task1;
@@ -159,8 +166,11 @@ void pendmain(void) {
   NVIC_EnableIRQ(PendSV_IRQn);
 
   // Task1 시작
-  longjmp(current_task->stack, 1);
+  setjmp(tasks[0].env);
+  longjmp(tasks[0].env, 1);
+  //longjmp(current_task->stack, 1);
 
   while (true) {}
 }
+
 #endif
