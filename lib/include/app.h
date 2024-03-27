@@ -6,13 +6,14 @@
  *      Author: seu
  */
 
-#ifndef INC_USER_MAIN_H_
-#define INC_USER_MAIN_H_
+#ifndef __APP_H_
+#define __APP_H_
 
-
+#include "main.h"
+#include "stdint.h"
 
 #if 0
-#include "main.h"
+
 #include "app_etc.h"
 
 #ifdef __cplusplus
@@ -27,5 +28,5 @@ void loop();
 #endif
 #endif
 
-#endif /* INC_USER_MAIN_H_ */
+#endif /* __APP_H_ */
 

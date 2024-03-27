@@ -215,7 +215,7 @@ void ps(const char *s) {
         case 0: // stop
           if(tb[0]) {
             val = stol(tb);
-            pfn_stop(val,1);
+            pfn_stop(val);
       gdebug(dl,"2. val=%d tb=[%s]\n", val, tb);
           } else { // error
 
@@ -224,7 +224,7 @@ void ps(const char *s) {
         case 1: // start
           if(tb[0]) {
             val = stol(tb);
-            pfn_stop(val,0);
+            pfn_start(val);
       gdebug(dl,"3. val=%d tb=[%s]\n", val, tb);
           } else { // error
 
@@ -320,6 +320,19 @@ extern gadc __adc1;
 extern void pendmain(void);
 extern "C" void ttt(void);
 
+ggpio et;
+uint32_t _uptime, _etime;
+void etfunc(uint16_t pin) {
+  int st = et.read();
+  if( st == 1 ) { // high, it is rised
+    _uptime = get_utime();
+    gdebug(2,"rising");
+  } else 
+  if( st == 0 ) { // its falled
+    _etime = elapsed_us(_uptime);
+    gdebug(2,"falled pulse time is %d usec", _etime);
+  }
+}
 
 void setup() {
   init_serial(115200);
@@ -351,6 +364,9 @@ ttt();
 #endif
 
   //pendmain();
+
+  et.init(GPIOB,5, eGPIO_EXTI_RISING_FALLING); //eGPIO_EXTI_FALLING); //eGPIO_EXTI_RISING_FALLING);
+  et.attach(etfunc);
 
   adc_channels ac[] = {
     { ADC_CHANNEL_0, ADC_SAMPLETIME_55CYCLES_5,GPIOA, 0,},

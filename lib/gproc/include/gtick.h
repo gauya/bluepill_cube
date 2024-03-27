@@ -50,24 +50,20 @@ int is_timed(timed_t *t);
 int is_timed_acm(timed_t *t); // accumulated by the elapsed time
 void set_timed(timed_t *t, uint32_t c);
 
+int is_utimed(timed_t *t);
+void set_utimed(timed_t *t, uint32_t c);
+
 #ifdef __cplusplus
  }
 
-class gtick : protected timed_t {
+class gtick : timed_t {
 public:
-	gtick();
-	gtick( uint32_t val );
-	virtual ~gtick();
+	gtick( uint32_t val=0 );
+	virtual ~gtick() {};
 
-	int timed();
-	void set( uint32_t val );
+	int is_timed();
+	void set_timed( uint32_t val );
 	uint32_t elapsed(); // milisecond
-
-	uint32_t get_tick() const;
-	int timed( timed_t *t );
-	void set( timed_t *t, uint32_t val );
-
-	uint32_t elapsed( uint32_t t ); // milisecond
 };
 
 #endif // __cplusplus

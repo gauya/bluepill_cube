@@ -164,6 +164,19 @@ void set_timed(timed_t *t, uint32_t c) {
 	t->m = get_mtime();
 }
 
+int is_utimed(timed_t *t) {
+	if(t->check != 0 && elapsed_us(t->m) >= t->check) {
+		t->m = get_utime(); 
+		return 1;
+	}
+	return 0;
+}
+
+void set_utimed(timed_t *t, uint32_t c) {
+	t->check = c;
+	t->m = get_utime();
+}
+
 #define U32ALLSET (uint32_t)(-1)
 //#define U32ALLSET (uint32_t)(0xffffffff)
 void delay_ms( uint32_t ms ) {
@@ -226,50 +239,29 @@ uint32_t belapsed_ms( uint32_t* e ) {
 #ifdef __cplusplus
 }
 
-gtick::gtick() {
-	// TODO Auto-generated constructor stub
-	check = 0;
-	m = get_tick();
+gtick::gtick( uint32_t check ) {
+	this->check = check;
+	this->m = get_mtime();
 }
 
-gtick::gtick(uint32_t val) {
-	check = val;
-	m = get_tick();
-}
-
-gtick::~gtick() {
-	// TODO Auto-generated destructor stub
-}
-
-uint32_t gtick::get_tick() const {
-	return get_mtime();
-}
-
-int gtick::timed() {
-	if(check > 0 && elapsed() >= check) {
-		m = get_mtime();
+int gtick::is_timed() {
+	if(this->check != 0 && elapsed_ms(this->m) >= this->check) {
+		this->m = get_mtime(); 
 		return 1;
 	}
-	return 0;
-}
-void gtick::set( uint32_t val ) {
-	check = val;
-	m = get_mtime();
-}
-uint32_t gtick::elapsed() { // milisecond
-	return dif_u32(m,get_mtime());
+	return 0;	
 }
 
-int gtick::timed( timed_t *t ) {
-	return ::is_timed(t);
+void gtick::set_timed(uint32_t c) {
+	if( c != (uint32_t)-1 ) {
+		this->check = c;
+	}
+	this->m = get_mtime();
 }
 
-void gtick::set( timed_t *t, uint32_t val ) {
-	::set_timed(t, val);
-}
 
-uint32_t gtick::elapsed( uint32_t t ) { // milisecond
-	return ::elapsed_ms( t );
+uint32_t gtick::elapsed() {
+	return dif_u32(this->m,get_mtime());
 }
 
 #endif // __cplusplus

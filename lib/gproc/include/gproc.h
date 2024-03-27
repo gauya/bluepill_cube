@@ -72,7 +72,7 @@ struct scadule_trfinf {
 };
 
 gpfn_t *get_pfn( int id );
-int pfn_stop(int no, int stop=1);
+int pfn_stop(int no);
 int pfn_start(int no); 
 int pfn_frq(int no, int ms);
 gpfn_t *get_proc_inf(int no);

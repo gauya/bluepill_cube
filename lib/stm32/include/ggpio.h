@@ -57,6 +57,8 @@ public:
 	int mode(int mode=-1);
 	// 0:out, 1:in, 2:x 3:adc,4:exti,5:AF(timer,uart,...)
 	int pins_nr();
+	inline bool isvalidpin() { return ( this->pin >= 0 && this->pin <= 15 && ((1 << this->pin) == _mask )); }
+	void deinit();
 
 // read function
 	int read();
@@ -68,7 +70,7 @@ public:
 	int write(int val);
 
 // write 
-	void attach( void (*extif)(uint16_t));
+	void attach( void (*extif)(uint16_t),int pullup=-1); // default FULLUP
 	void detach();
 
 // debugging
@@ -105,8 +107,8 @@ public:
 	inline bool isinit() { return (_inited) ? true : false;}
 	int mode(int mode=-1);
 	// 0:out, 1:in, 2:x 3:adc,4:exti,5:AF(timer,uart,...)
+	inline bool isvalidpin(int pin) { return ( pin >= 0 && pin <= 15 && ((1 << pin) & mask)); }
 	int pins_nr();
-	inline bool isvalidpin(int pin) { return ( pin >= 0 && pin <= 15 && ((1 << pin) & this->mask)); }
 
 // read function
 	int read();

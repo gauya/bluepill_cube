@@ -1,5 +1,6 @@
 #include <ggpio.h>
 #include <glog.h>
+#include <stm32f1xx_hal_exti.h>
 
 #if 0
 
@@ -88,6 +89,28 @@ int exti_irqn(int exti) {
     return -1; 
 } 
 
+void EXTI0_IRQHandler(void) {
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+}
+void EXTI1_IRQHandler(void) {
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
+}
+void EXTI2_IRQHandler(void) {
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
+}
+void EXTI3_IRQHandler(void) {
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_3);
+}
+void EXTI4_IRQHandler(void) {
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
+}
+void EXTI9_5_IRQHandler(void) {
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9);
+}
+void EXTI15_10_IRQHandler(void) {
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15);
+}
+
 #if 0
 void HAL_GPIO_EXTI_IRQHandler(uint16_t GPIO_Pin)
 {
@@ -97,6 +120,10 @@ void HAL_GPIO_EXTI_IRQHandler(uint16_t GPIO_Pin)
     __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
     HAL_GPIO_EXTI_Callback(GPIO_Pin);
   }
+}
+
+void HAL_EXTI_IRQHandler(EXTI_HandleTypeDef *hexti) {
+
 }
 #endif
 
@@ -108,19 +135,35 @@ int right_bitno( uint16_t val ) {
 }
 
 void (*_exti_callback)(uint16_t bits) = 0;
+void (*_exti_callback_s[16])(uint16_t bits) = {0,};
+__IO uint16_t _exti_callback_bf = 0;
 
 void exti_handler(uint16_t GPIO_Pin) {
     if(__HAL_GPIO_EXTI_GET_IT(GPIO_Pin) != RESET) { // (EXTI->PR & (__EXTI_LINE__)
         uint16_t fl = EXTI->PR & (GPIO_Pin);
+
         __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);         // (EXTI->PR = (__EXTI_LINE__))
-        
         if( _exti_callback ) {
-//            _exti_callback( GPIO_Pin );
-            _exti_callback( fl );
-        }
+            _exti_callback( fl ); // GPIO_Pin
+        }        
+       
+        fl &= _exti_callback_bf;
+        if( fl ) {
+            for( int i=0; i < 15 && fl ; i++, fl >>= 1) {
+                if( fl & 1 ) {
+                    if( _exti_callback_s[i] ) {
+                        _exti_callback_s[i](i);
+                    }
+                }
+            }
+        }        
     }    
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    exti_handler(GPIO_Pin);
+}
+#if 0
 void HAL_GPIO_EXTI0_IRQHandler(void) {
     exti_handler(GPIO_PIN_0);
 }
@@ -142,13 +185,13 @@ void HAL_GPIO_EXTI4_IRQHandler(void) {
 }
 
 void HAL_GPIO_EXTI9_5_IRQHandler(void) {
-  exti_handler( GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 );
+    exti_handler( GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 );
 }
 
 void HAL_GPIO_EXTI15_10_IRQHandler(void) {
     exti_handler( GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15 );
 }
-
+#endif
 #ifdef __cplusplus
 }
 
@@ -208,6 +251,11 @@ void ggpio::init(GPIO_TypeDef *g, int pin, uint32_t mode, int pullup, int speed)
 }
 
 void ggpio::init() {
+    if( !this->port || this->pin < 0 || this->pin > 15) {
+        this->pin = -1;
+        _flag = 0;
+        return;
+    }
     GPIO_InitTypeDef gi;
 
     if( IS_GPIO_ALL_INSTANCE(this->port)) {
@@ -247,6 +295,26 @@ void ggpio::init() {
         default:;
     }
 
+    if( mode | (GPIO_MODE_IT_RISING & GPIO_MODE_IT_FALLING) ) { // if IT
+        uint16_t p = this->_mask;
+        for(int i=0; i < 16; i++, p >>=1 ) {
+            if( !(p & 1) ) continue; // not pin
+            int irqn = exti_irqn(i);
+            if( irqn < 0 ) continue; // error
+#if 0
+  EXTI_InitTypeDef EXTI_InitStruct;
+  EXTI_InitStruct.Line = EXTI_LINE5;
+  EXTI_InitStruct.Mode = EXTI_MODE_INTERRUPT;
+  EXTI_InitStruct.Trigger = EXTI_TRIGGER_RISING;
+  HAL_EXTI_Init(&EXTI_InitStruct);
+#endif
+            HAL_NVIC_SetPriority( (IRQn_Type)irqn, 0, 0 );
+            HAL_NVIC_EnableIRQ( (IRQn_Type)irqn );
+            
+            //_pullup = GPIO_PULLDOWN;
+        }
+    }
+
     gi.Pin   = (uint32_t)this->_mask;
     gi.Mode  = (uint32_t)mode;
     gi.Speed = (uint32_t)_speed;
@@ -254,32 +322,55 @@ void ggpio::init() {
 
     HAL_GPIO_Init( this->port, &gi );
 
-    if( mode | (GPIO_MODE_IT_RISING & GPIO_MODE_IT_FALLING) ) { // if IT
-        uint16_t p = this->_mask;
-        for(int i=0; i < 16; i++, p >>=1 ) {
-            if( !(p & 1) ) continue; // not pin
-            int irqn = exti_irqn(i);
-            if( irqn < 0 ) continue; // error
-            
-            HAL_NVIC_SetPriority( (IRQn_Type)irqn, 0, 0 );
-            HAL_NVIC_EnableIRQ( (IRQn_Type)irqn );
-        }
-    }
     _inited = 1;
 }
 
-void ggpio::attach( void (*extif)(uint16_t)) {
-    _exti_callback = extif;
+void ggpio::deinit() {
+    if( isvalidpin() ) {
+        detach();
+    }
+    this->port = 0;
+    this->pin = -1;
+    this->_mask = 0;
+    this->_flag = 0;
+    this->_pullup = 0;
+    this->_speed = 0;
+}
+
+void ggpio::attach( void (*extif)(uint16_t), int updn) {
+    if( !isvalidpin() ) return;
+
+    if(updn < 0 || updn > 2) updn = _pullup;
+    if( updn != _pullup ) {
+        _pullup = updn;
+
+    }
+    __disable_irq();
+    _exti_callback_s[this->pin] = extif;
+    _exti_callback_bf |= _mask;
+
+    __enable_irq();
 }
 
 void ggpio::detach() {
-    _exti_callback = 0;
+    if( !isvalidpin() ) return;
+    
+    __disable_irq();
+    _exti_callback_s[this->pin] = 0;
+    _exti_callback_bf &= ~_mask;
+    __enable_irq();
+//    _exti_callback = 0;
 }
 
 int ggpio::read() {
-    if( ! isinit() || _mode != eGPIO_INPUT ) return -1;
+    if( ! isinit() ) return -1;
     
-    return (this->port->IDR & this->_mask)? 1 : 0;
+    if(_mode == eGPIO_INPUT || _mode == eGPIO_EXTI_RISING || _mode == eGPIO_EXTI_FALLING || _mode == eGPIO_EXTI_RISING_FALLING ) {
+        return (this->port->IDR & this->_mask)? 1 : 0;
+    }
+    if(_mode == eGPIO_OUTPP || _mode == eGPIO_OUTOD ) {
+        return (this->port->ODR & this->_mask)? 1 : 0;
+    }
 }
 
 int ggpio::write( int val ) {
@@ -404,13 +495,6 @@ void gwgpio::init() {
         default:;
     }
 
-    gi.Pin = this->mask;
-    gi.Mode = mode;
-    gi.Speed = _speed;
-    gi.Pull = _pullup;
-
-    HAL_GPIO_Init( this->port, &gi );
-
     if( mode | (GPIO_MODE_IT_RISING & GPIO_MODE_IT_FALLING) ) { // if IT
         uint16_t p = this->mask;
         for(int i=0; i < 16; i++, p >>=1 ) {
@@ -420,8 +504,17 @@ void gwgpio::init() {
             
             HAL_NVIC_SetPriority( (IRQn_Type)irqn, 0, 0 );
             HAL_NVIC_EnableIRQ( (IRQn_Type)irqn );
+
         }
     }
+
+    gi.Pin = this->mask;
+    gi.Mode = mode;
+    gi.Speed = _speed;
+    gi.Pull = _pullup; //
+
+    HAL_GPIO_Init( this->port, &gi );
+
     _inited = 1;
 }
 

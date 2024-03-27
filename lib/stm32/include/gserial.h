@@ -75,7 +75,7 @@ int cdc_putc(int ch);
 int __io_putchar(int ch);
 int __io_getchar();
 int _write(int32_t file, uint8_t *ptr, int32_t len);
-int gprintf(const char*format,...);
+int gsprintf(const char*format,...);
 int gdprintf(int fd,const char*format,...);
 
 #ifdef __cplusplus

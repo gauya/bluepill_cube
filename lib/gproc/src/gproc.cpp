@@ -114,21 +114,23 @@ void run_rtproc_all() {
 
 #endif
 
-int pfn_stop(int no, int stop) { // stop==1 then set stop, or reset
+int pfn_stop(int no) { // stop==1 then set stop, or reset
 	gpfn_t *g = get_pfn(no);
 	if( !g ) return -1;
 
-	if( stop ) {
-		g->status |= 0x2;
-	} else {
-		g->status &= ~0x2;
-	}
+	g->status |= 0x2;
 
 	return 0;
 }
 
 int pfn_start(int no) {
-	return pfn_stop(no , 0);
+	gpfn_t *g = get_pfn(no);
+	if( !g ) return -1;
+	
+	g->status &= ~0x2;
+	g->tmd.m = get_mtime();
+	
+	return 0;
 }
 
 int pfn_frq(int no, int ms) {

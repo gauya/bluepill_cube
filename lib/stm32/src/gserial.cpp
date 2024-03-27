@@ -384,7 +384,7 @@ int gwrite(uint8_t *data, uint16_t len,int fd) {
 	return -1;
 }
 
-int gprintf(const char*fmt,...) {
+int gsprintf(const char*fmt,...) {
 	char buf[GDEBUG_BUFLEN];
 	va_list ap;
 	va_start(ap,fmt);

@@ -11,6 +11,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <gserial.h>
+#include <gprintf.h>
 
 #ifdef __cplusplus
 extern "C" {
