@@ -321,16 +321,24 @@ extern void pendmain(void);
 extern "C" void ttt(void);
 
 ggpio et;
-uint32_t _uptime, _etime;
-void etfunc(uint16_t pin) {
+uint32_t _uptime, _etime, _rise=0,_fall=0;
+void etfunc(uint16_t pin) 
+{
   int st = et.read();
   if( st == 1 ) { // high, it is rised
     _uptime = get_utime();
-    gdebug(2,"rising");
+    _rise++;
+    _fall = 0;
+//    gdebug(2,"rise\n");
   } else 
   if( st == 0 ) { // its falled
-    _etime = elapsed_us(_uptime);
-    gdebug(2,"falled pulse time is %d usec", _etime);
+    if( _rise > 0 ) {
+      _etime = elapsed_us(_uptime);
+      gdebug(2,"fall %d rise=%d _fall=%d\n", _etime,_rise,_fall);
+      _rise=0;
+    } else {
+      _fall++;
+    }
   }
 }
 
@@ -365,8 +373,8 @@ ttt();
 
   //pendmain();
 
-  et.init(GPIOB,5, eGPIO_EXTI_RISING_FALLING); //eGPIO_EXTI_FALLING); //eGPIO_EXTI_RISING_FALLING);
-  et.attach(etfunc);
+  et.init(GPIOB,5,eGPIO_EXTI_RISING_FALLING); //eGPIO_EXTI_FALLING); //eGPIO_EXTI_RISING_FALLING);
+  et.attach(etfunc,0);
 
   adc_channels ac[] = {
     { ADC_CHANNEL_0, ADC_SAMPLETIME_55CYCLES_5,GPIOA, 0,},
