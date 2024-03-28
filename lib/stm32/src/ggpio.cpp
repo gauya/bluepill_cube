@@ -2,60 +2,6 @@
 #include <glog.h>
 #include <stm32f1xx_hal_exti.h>
 
-#if 0
-
-
-((MODE) == GPIO_MODE_INPUT)              ||\
-                            ((MODE) == GPIO_MODE_OUTPUT_PP)          ||\
-                            ((MODE) == GPIO_MODE_OUTPUT_OD)          ||\
-                            ((MODE) == GPIO_MODE_AF_PP)              ||\
-                            ((MODE) == GPIO_MODE_AF_OD)              ||\
-                            ((MODE) == GPIO_MODE_IT_RISING)          ||\
-                            ((MODE) == GPIO_MODE_IT_FALLING)         ||\
-                            ((MODE) == GPIO_MODE_IT_RISING_FALLING)  ||\
-                            ((MODE) == GPIO_MODE_EVT_RISING)         ||\
-                            ((MODE) == GPIO_MODE_EVT_FALLING)        ||\
-                            ((MODE) == GPIO_MODE_EVT_RISING_FALLING) ||\
-                            ((MODE) == GPIO_MODE_ANALOG)
-#define IS_GPIO_SPEED(SPEED) (((SPEED) == GPIO_SPEED_FREQ_LOW)  || ((SPEED) == GPIO_SPEED_FREQ_MEDIUM) || \
-                              ((SPEED) == GPIO_SPEED_FREQ_HIGH) || ((SPEED) == GPIO_SPEED_FREQ_VERY_HIGH))
-#define IS_GPIO_PULL(PULL) (((PULL) == GPIO_NOPULL) || ((PULL) == GPIO_PULLUP) || \
-                            ((PULL) == GPIO_PULLDOWN))
-#define  GPIO_NOPULL        0x00000000U   /*!< No Pull-up or Pull-down activation  */
-#define  GPIO_PULLUP        0x00000001U   /*!< Pull-up activation                  */
-#define  GPIO_PULLDOWN      0x00000002U   /*!< Pull-down activation                */
-
-
-typedef struct
-{
-  __IO uint32_t ACR;      /*!< FLASH access control register,   Address offset: 0x00 */
-  __IO uint32_t KEYR;     /*!< FLASH key register,              Address offset: 0x04 */
-  __IO uint32_t OPTKEYR;  /*!< FLASH option key register,       Address offset: 0x08 */
-  __IO uint32_t SR;       /*!< FLASH status register,           Address offset: 0x0C */
-  __IO uint32_t CR;       /*!< FLASH control register,          Address offset: 0x10 */
-  __IO uint32_t OPTCR;    /*!< FLASH option control register ,  Address offset: 0x14 */
-  __IO uint32_t OPTCR1;   /*!< FLASH option control register 1, Address offset: 0x18 */
-} FLASH_TypeDef;
-
-/**
-  * @brief General Purpose I/O
-  */
-
-typedef struct
-{
-  __IO uint32_t MODER;    /*!< GPIO port mode register,               Address offset: 0x00      */
-  __IO uint32_t OTYPER;   /*!< GPIO port output type register,        Address offset: 0x04      */
-  __IO uint32_t OSPEEDR;  /*!< GPIO port output speed register,       Address offset: 0x08      */
-  __IO uint32_t PUPDR;    /*!< GPIO port pull-up/pull-down register,  Address offset: 0x0C      */
-  __IO uint32_t IDR;      /*!< GPIO port input data register,         Address offset: 0x10      */
-  __IO uint32_t ODR;      /*!< GPIO port output data register,        Address offset: 0x14      */
-  __IO uint32_t BSRR;     /*!< GPIO port bit set/reset register,      Address offset: 0x18      */
-  __IO uint32_t LCKR;     /*!< GPIO port configuration lock register, Address offset: 0x1C      */
-  __IO uint32_t AFR[2];   /*!< GPIO alternate function registers,     Address offset: 0x20-0x24 */
-} GPIO_TypeDef;
-                            
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -111,29 +57,6 @@ void EXTI15_10_IRQHandler(void) {
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15);
 }
 
-#if 0
-void HAL_GPIO_EXTI_IRQHandler(uint16_t GPIO_Pin)
-{
-  /* EXTI line interrupt detected */
-  if(__HAL_GPIO_EXTI_GET_IT(GPIO_Pin) != RESET)
-  {
-    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
-    HAL_GPIO_EXTI_Callback(GPIO_Pin);
-  }
-}
-
-void HAL_EXTI_IRQHandler(EXTI_HandleTypeDef *hexti) {
-
-}
-#endif
-
-int right_bitno( uint16_t val ) {
-    for( int i=0; i < 16; i++, val >>= 1 ) {
-        if( val & 1) return i;
-    }
-    return -1;
-}
-
 void (*_exti_callback)(uint16_t bits) = 0;
 void (*_exti_callback_s[16])(uint16_t bits) = {0,};
 __IO uint16_t _exti_callback_bf = 0;
@@ -155,7 +78,6 @@ void exti_handler(uint16_t GPIO_Pin) {
                     if( _exti_callback_s[i] ) {
                         _exti_callback_s[i](i);
                     }
-//                    __HAL_GPIO_EXTI_CLEAR_IT(1 << i);         // (EXTI->PR = (__EXTI_LINE__))
                 }
             }
             __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);         // (EXTI->PR = (__EXTI_LINE__)) HAL_EXTI_ClearITPendingBit(GPIO_Pin);
@@ -167,35 +89,7 @@ void exti_handler(uint16_t GPIO_Pin) {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     exti_handler(GPIO_Pin);
 }
-#if 0
-void HAL_GPIO_EXTI0_IRQHandler(void) {
-    exti_handler(GPIO_PIN_0);
-}
 
-void HAL_GPIO_EXTI1_IRQHandler(void) {
-    exti_handler(GPIO_PIN_1);
-}
-
-void HAL_GPIO_EXTI2_IRQHandler(void) {
-    exti_handler(GPIO_PIN_2);
-}
-
-void HAL_GPIO_EXTI3_IRQHandler(void) {
-    exti_handler(GPIO_PIN_3);
-}
-
-void HAL_GPIO_EXTI4_IRQHandler(void) {
-    exti_handler(GPIO_PIN_4);
-}
-
-void HAL_GPIO_EXTI9_5_IRQHandler(void) {
-    exti_handler( GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 );
-}
-
-void HAL_GPIO_EXTI15_10_IRQHandler(void) {
-    exti_handler( GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15 );
-}
-#endif
 #ifdef __cplusplus
 }
 
@@ -376,22 +270,26 @@ void ggpio::detach() {
     if( !isvalidpin() ) return;
     
     __disable_irq();
+
     _exti_callback_s[this->pin] = 0;
     _exti_callback_bf &= ~_mask;
+
     __enable_irq();
-//    _exti_callback = 0;
+
 }
 
 int ggpio::read() {
     if( ! isinit() ) return -1;
   
+    return (this->port->IDR & this->_mask)? 1 : 0;
+#if 0    
     if(_mode == eGPIO_INPUT || _mode == eGPIO_EXTI_RISING || _mode == eGPIO_EXTI_FALLING || _mode == eGPIO_EXTI_RISING_FALLING ) {
         return (this->port->IDR & this->_mask)? 1 : 0;
     }
     if(_mode == eGPIO_OUTPP || _mode == eGPIO_OUTOD ) {
         return (this->port->ODR & this->_mask)? 1 : 0;
     }
-
+#endif
 }
 
 int ggpio::write( int val ) {
