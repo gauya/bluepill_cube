@@ -22,6 +22,7 @@ dead band 4us
 
 // timer 50hz
 class servo : gtimer {
+    void igo(float a);
 public:    
     float _cur_angle;
     float _margin,_minl,_maxr; // 
@@ -33,8 +34,7 @@ public:
     ~servo();
 
     void angle(float a);// -90 ~ +90
-    void inc(float i);  // +- increment
-    void igo(float i);  // +- increment
+    void iangle(float i);  // +- increment
 };
 
 servo :: servo(TIM_TypeDef *tim, int channel, gpio_t *g) 
@@ -63,7 +63,7 @@ void servo::angle(float a)
     this->pwm_start(_channel);
 }
 
-void servo::inc(float i) 
+void servo::iangle(float i) 
 {
     if( fabs(i) < _margin ) return;
 
@@ -72,10 +72,6 @@ void servo::inc(float i)
     else if( n > _maxr) n = _maxr;
     
     igo(n);
-    _cur_angle = n;
-    float val = 1500 + (_per_angle * n);
-    this->ccr(_channel,val);
-    this->pwm_start(_channel);
 }
 
 void servo::igo(float n) 

@@ -36,6 +36,7 @@ uint32_t HAL_GetTick(void) {
 	return __mTicks;
 }
 
+
 #if ( __RT_PROC__ != 0)
 __attribute((__weak__)) void run_rtproc_all() {
 	return;
@@ -46,7 +47,10 @@ __attribute((__weak__)) void run_rtproc(uint16_t i) {
 }
 #endif
 
-void HAL_IncTick(void) {
+void SysTick_Handler(void)
+{
+	HAL_IncTick();
+
 	static uint16_t cnt=0, mcnt=0;
 	__uTicks += __usec_per_tick;
 	if(++cnt >= __tick_vol) {
@@ -83,7 +87,7 @@ void HAL_IncTick(void) {
 		break;
 	}
 	__enable_irq();
-#endif	
+#endif	  
 }
 
 #ifdef __DEBUG__
