@@ -10,7 +10,7 @@
 #define LIB_INC_APP_ETC_H_
 
 #include "app.h"
-#include "gstr.h"
+#include "gparse.h"
 #include "glog.h"
 #include "gtty.h"
 #include "gproc.h"

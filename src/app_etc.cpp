@@ -5,7 +5,7 @@
  *      Author: seu
  */
 #include "app_etc.h"
-#include "gstr.h"
+#include "gparse.h"
 
 int add_proc(const char*pn, void (*f)(const char*), int timer, int act) { // when act = 0 and timer >= 0, the processor starts in a stopped state.
 	int no=0;
