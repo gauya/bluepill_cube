@@ -10,7 +10,6 @@ void tolowers(char *str);
 int strchri(const char *s,int ch);
 const char* whitespace_skip(const char *b);
 const char *space_skip(const char *b,const char *s);
-int cmpstr(const char *s,const char *d);
 int instrs(const char *s,const char **dest);
 int stoi(const char *s);
 double stof(const char *s);

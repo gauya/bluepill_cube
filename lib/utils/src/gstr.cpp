@@ -55,23 +55,11 @@ int strchri(const char *s,int ch) {
 	return -1;
 }
 
-// strcmp  (*s2 - *s1)
-// cmpstr  0: equal, 1: s > d, 'd' is fully included in 's', -1: error or not include
-int cmpstr(const char *s,const char *d) {
-	if( !s || !d ) return -1;
-
-	for(;*s == *d;s++,d++) {
-		if( !*d ) return 0;
-	}
-	//	return ((uint8_t)(*s) < (uint8_t)(*d))? -1 : 1;
-	return (*d)? -1 : 1;
-}
-
 int instrs(const char *s,const char **dest) {
 	if(!s || !dest) return -1;
 
 	for(int i=0;*dest;i++,dest++) {
-		if( cmpstr(s,*dest) == 0 )
+		if( strcmp(s,*dest) == 0 )
 			return i;
 	}
 	return -1;
@@ -632,47 +620,12 @@ gstr& gstr::upper() {
 	return *this;
 }
 
-#ifdef TEST
-#include <malloc.h>
-int ld_file(const char *filename, char**buf)
-{
-	int size = 0;
-	FILE *f = fopen(filename, "rb");
-	if (f == NULL)
-	{
-		*buf = NULL;
-		return -1; // -1 means file opening fail
-	}
-	fseek(f, 0, SEEK_END);
-	size = ftell(f);
-	fseek(f, 0, SEEK_SET);
-	*buf = (char *)malloc(size+1);
-	if(!*buf) {
-		fclose(f);
-		return -3;
-	}
-	if (size != fread(*buf, sizeof(char), size, f))
-	{
-		free(*buf);
-		*buf = 0;
-		return -2; // -2 means file reading fail
-	}
-	fclose(f);
-	return size;
+#ifdef GSTR_TEST
+
+#include "gprintf.h"
+void gstr_test() {
+	gstr s0("I am a Boy");
+
 }
 
-int main(int argc,char **argv) {
-	if(argc < 1) return 1;
-
-	char *bf=0;
-	int sz = ld_file(argv[1], &bf);
-	printf("[%s] fsize=%d\n", argv[1],sz);
-	if(sz < 0 || !bf) {
-		return 1;
-	}
-	parse(bf,0);
-
-	free(bf);
-}
-
-#endif // TEST
+#endif // GSTR_TEST

@@ -152,7 +152,7 @@ block_type_t *is_start_block(const char *str) {
 	if( !str || !*str ) return (block_type_t*)0;
 
 	for( int i=0;b->etype != eNOTBLOCK; i++,b++) {
-		if(cmpstr(str,b->start) >= 0) {
+		if(strcmp(str,b->start) >= 0) {
 			return b;
 		}
 	}
@@ -166,7 +166,7 @@ block_type_t *is_end_block(const char *str) {
 	if( !str || !*str ) return (block_type_t*)0;
 
 	for( int i=0;b->etype != eNOTBLOCK; i++,b++) {
-		if(cmpstr(str,b->end) >= 0) {
+		if(strcmp(str,b->end) >= 0) {
 			return b;
 		}
 	}
@@ -786,3 +786,51 @@ int parse(const char *s,int step) {
 
 	return (int)cnt;
 }
+
+
+#ifdef GPARSE_TEST
+#include <malloc.h>
+#include "gprintf.h"
+
+int ld_file(const char *filename, char**buf)
+{
+	int size = 0;
+	FILE *f = fopen(filename, "rb");
+	if (f == NULL)
+	{
+		*buf = NULL;
+		return -1; // -1 means file opening fail
+	}
+	fseek(f, 0, SEEK_END);
+	size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	*buf = (char *)malloc(size+1);
+	if(!*buf) {
+		fclose(f);
+		return -3;
+	}
+	if (size != fread(*buf, sizeof(char), size, f))
+	{
+		free(*buf);
+		*buf = 0;
+		return -2; // -2 means file reading fail
+	}
+	fclose(f);
+	return size;
+}
+
+void gparse_test() {
+	char *bf=0;
+	char fn[] = "gparse_test.txt";
+
+	int sz = ld_file(fn, &bf);
+	gprintf("[%s] fsize=%d\n", fn,sz);
+	if(sz < 0 || !bf) {
+		return 1;
+	}
+	parse(bf,0);
+
+	free(bf);
+}
+
+#endif // TEST
