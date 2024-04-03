@@ -48,7 +48,8 @@ public:
 	gstr& operator <<= (const char*);
 	void lstrip(const char* d=0);
 	void rstrip(const char *d=0);
-	gstr& cut(int,int); // from to
+	gstr& cut(int from,int to); // from to
+	gstr extract(int from,int to);
 	gstr& remove(const char*);
 	gstr& remove_all(const char*);
 	gstr& replace(const char*, const char* to=0);

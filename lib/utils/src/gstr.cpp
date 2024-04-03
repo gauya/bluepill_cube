@@ -8,6 +8,8 @@
 #include "gstr.h"
 #include <ctype.h>
 #include <stdexcept>
+#include <string.h>
+
 using namespace std;
 
 const char __default_white_space[] = " \t\n\r";
@@ -307,22 +309,19 @@ gstr::operator const char*() const{
 	return (const char*)_str;
 }
 
+
 gstr& gstr::operator=(gstr &g) {
 	if( _bsize > 0 ) {
 		delete[] _str;
 	}
-	if( g.len() > 0 ) {
-		_str = new char[g.len()+1];
-		_len = g.len();
-		_bsize = g._len+1;
-	} else {
-		_str = 0;
-		_len = 0;
-		_bsize = 0;
-	}
+	_bsize = g._len+1;
+	_str = new char[_bsize];
+	_len = g.len();
+
+	strcpy(_str, (const char *)g);
+
 	return *this;
 }
-#include <string.h>
 
 gstr& gstr::operator=(const char*s) {
 	if( _bsize > 0 ) {
@@ -602,6 +601,19 @@ gstr& gstr::replace_all(const char*s1, const char*s2) {
 	};
 	
 	return *this;
+}
+
+gstr gstr::extract(int from, int to) {
+	if( to < 0 ) to = _len - 1;
+	uint32_t len = to - from + 1;
+	if(from >= to || from < 0 || (uint32_t)to >= _len)
+		return (gstr)0;
+	
+	char *buf = new char[len+1];
+	strnzcpy(buf, _str+from, len);
+	gstr n(buf);
+
+	return n;
 }
 
 gstr& gstr::cut(int from, int to) {
