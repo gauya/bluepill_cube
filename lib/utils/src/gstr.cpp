@@ -650,15 +650,26 @@ gstr& gstr::upper() {
 
 #include "gprintf.h"
 void gstr_test() {
-	gstr s0("  I am a Boy");
-	gstr s1 = s0 + ", so hungry";
+	gstr s0("  I skipped breakfast");
+	gstr s1 = s0 + ", so hungry, How about you?";
+	char ch=s1[7];
+	printf("1. operator + len=%d [%c] [%s]",s1.len(),ch,(const char*)s1);
 	s1 <<= "\n";
 	s1.lstrip();
-	char ch=s1[7];
+	printf("2. <<=, lstrip len=%d [%c] [%s]",s1.len(),ch,(const char*)s1);
 	s1.remove("so");
-	s1.replace_all("a","A");
-	gprintf("[%c] %s",ch,(const char*)s1);
-
+	printf("3. remove len=%d [%c] [%s]",s1.len(),ch,(const char*)s1);
+	s1.replace("a","++");
+	//s1.replace("a","A");
+	printf("4. replace len=%d [%c] [%s]",s1.len(),ch,(const char*)s1);
+	s1.replace_all("a","++");
+	printf("5. replace_all len=%d [%c] [%s]",s1.len(),ch,(const char*)s1);
+	s1.remove_all("o");
+	printf("6. replace_all len=%d [%c] [%s]",s1.len(),ch,(const char*)s1);
+	s0 = s1.cut(7,15);
+	printf("7. cut 7-15 len=%d [%c] [%s] (%s)",s1.len(),ch,(const char*)s1, (const char *)s0);
+	s0 = s1.extract(7,15);
+	printf("8. extract 7-15 len=%d [%c] [%s] (%s)",s1.len(),ch,(const char*)s1, (const char *)s0);
 }
 
 #endif // GSTR_TEST

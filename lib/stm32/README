@@ -1,13 +1,18 @@
-uart,adc를 라이브러리로 만들려고 했는데 ...
+C와 C++을 섞어 쓸때 나오는 linkage 문제들이 있다.
 
-mbed나 아두이노처럼 비슷하게 쓰려고 한다. 
+vscode같은 인텔리젠트 컴파일환경이 때로 더 힘들게 한다.
 
-UART, ADC - 두가지 문제들이 있었다.
-  - void USART1_IRQHandler(void)... 이런 함수를 xx_it.c에서 다른곳으로 옮기니 먹통이 됐다.  
-    --> stm32f1xx_it.h파일을 올려주니 해결됐는데 내가 C와 C++을 함께 쓰니 extern "C"가 필요했는데 그냥 인터럽트 핸들러먄 옮기면서 문제된듯하다.
+C,C++을 따로 만드는게 좋은지 한곳에 두는게 좋은지... 
 
-  - xx_hal_msp.c파일에 Init()함수들의 보조함수들이 있는데 이 함수들의 내용만 따로 빼서 만들면서 발생한 문제
-    --> ...Init()함수는 필요시 중간에 ...MspInit()함수를 추가로 호출하는데 호출되는 타이밍이 있다. 이걸 무시하고 작성하면 문제가 됨
-    모든 문제를 낱낱이 해결하든가. void HAL_xx_MspInit()이런 함수이름을 바꾸지 않고 그대로 쓰던가. 아니면 callback한수를 만들어 등록하든가 해야 된다.
-    뭘하든 cubemx에서 만들어준 이름을 그대로 쓰자니 기분 나쁘고 callback을 쓰는건 더 손만가고 짜증나는 일이다.
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// here is C 
+#ifdef __cplusplus
+}
+
+// here is C++
+
+#endif
 
