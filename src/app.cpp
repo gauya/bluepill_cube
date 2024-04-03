@@ -101,6 +101,17 @@ void test_adc() {
   }
 }
 
+#ifdef GSTR_TEST
+  extern void gstr_test();
+#endif
+
+void test0(const char *msg) 
+{
+#ifdef GSTR_TEST
+  gstr_test();
+#endif
+}
+
 void test1() {
   gdebug(3,".");
 }
@@ -404,6 +415,7 @@ ttt();
   set_tty_func("time",cli_test2);
   set_tty_func("str",strtestf);
   set_tty_func("ls",command_list);
+  set_tty_func("test",test0);
 
   add_pfn(1000, loop_led, "led blink");
   add_pfn(100,test1,"N1");

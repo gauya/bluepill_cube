@@ -192,6 +192,16 @@ double stof(const char *s) {
 	return (minus == -1)? -v : v;
 }
 
+
+int cmpstr( const char *s1, const char *s2) {
+	if( !s1 || !s2 ) return -1;
+
+	for( ; *s1 == *s2; s1++,s2++ ) {}
+	if( *s1 ) return -1;
+	
+	return ( *s2 )? 1 : 0;
+}
+
 // return field number, -1 when error or not effective field
 int chop_str(char *msg, char **dest, size_t num, const char *dil) {
 	int cnt=0;
@@ -532,61 +542,65 @@ gstr& gstr::replace(const char*s1, const char*s2) {
 
 gstr& gstr::replace_all(const char*s1, const char*s2) {
 	if(!s1) return *this;
+
 	char *s = strstr(_str,s1);
 	if(!s) return *this;
 
-	if(!s2) return remove_all(s1);
+	uint32_t l1=strlen(s1),l2, elen=-1,ebsize=-1;
+	l2 = (s2)? strlen(s2) : 0;
 
-	uint32_t l1=strlen(s1),l2=strlen(s2);
+	int cl = l1 - l2;
+	
+	// lookup s1 from s0, whth count length s0
+	int cnt=0;
+	char *sp = _str, *spp = _str, *sp0=0;
 
-	auto scp = [](char*s,const char*s2){ while(*s2){ *s++ = *s2++; }; return s; };
-	// l1 == l2
-	if( l1 == l2 ) {
-		scp(s,s2);
-		return *this;
+	while( *sp ) {
+		sp = strstr( sp, s1 );
+		if(sp) {
+			cnt++;
+			sp += l1;
+		} else 
+			break;
 	}
 
-	char *p1, *p2;
-	// l1 > l2
-	if( l1 > l2 ) {
-		do {
-			p2 = s + l2;
-			p1 = s + l1;
-			scp(s,s2);
-			s = strstr(p1,s1);
+	elen = _len - (cnt * cl);
+	
+	if( (elen + 1) >= _bsize ) { // l2 > l1 --> new alloc
+		ebsize = elen + 1;
+		spp = sp0 = new char[ ebsize ];
+	} else {
+		spp = _str;
+	}	
+	sp = _str;
+	
+	while( *sp ) {
+		if( cmpstr(s1,sp) > 0 ) { 
+			if( sp0 ) {  
+				if(l2 > 0) { // else remove
+					strcpy(spp,s2);
+					spp += l2;
+				}
+			} else { // cl == 0, no alloc
+				if( l2 > 0 ) {// else remove
+					strncpy( spp, s2, l2);
+					spp += l2;
+				}
+			}
+			sp += l1; // skip
 
-		} while(s);
-		strcpy(p2,p1);
-
-		_len = strlen(_str);
-
-		return *this;
+		} else {
+			*spp++ = *sp++;
+		}
 	}
 
-	char *nstr = new char[_len + l2 + 1];
-	p2 = nstr;
-	p1 = _str;
-	int ln;
-	do {
-		ln = s-p1;
-		strncpy(p2, p1, ln);
-		s += l1;
-		p1 = s;
-		p2 += ln;
-		strncpy(p2, s2, l2);
-		p2 += l2;
-
-		s = strstr(p1, s1);
-	} while(s);
-	if(!s) {
-		strcpy(p2, p1);
-	}
-
-	if( _bsize > 0 ) delete _str;
-	_bsize = _len + l2 + 1;
-	_len = strlen(nstr);
-	_str = nstr;
-
+	if( sp0 ) {
+		delete[] _str;
+		_str = sp0;
+		_len = elen;
+		_bsize = ebsize;
+	};
+	
 	return *this;
 }
 
@@ -624,7 +638,14 @@ gstr& gstr::upper() {
 
 #include "gprintf.h"
 void gstr_test() {
-	gstr s0("I am a Boy");
+	gstr s0("  I am a Boy");
+	gstr s1 = s0 + ", so hungry";
+	s1 <<= "\n";
+	s1.lstrip();
+	char ch=s1[7];
+	s1.remove("so");
+	s1.replace_all("a","A");
+	gprintf("[%c] %s",ch,(const char*)s1);
 
 }
 

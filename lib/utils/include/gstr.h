@@ -17,6 +17,7 @@ int64_t stol(const char *s);
 int str2arr(char *msg, char **dest, size_t sz, const char *dil);
 int str2arri(const char *msg, int16_t *dest, size_t sz, const char *dil);
 char *strnzcpy(char *s1, const char *s2, size_t n);
+int cmpstr( const char *s1, const char *s2);
 int chop_str(char *msg, char **dest, size_t num, const char *dil);
 
 class gstr {
