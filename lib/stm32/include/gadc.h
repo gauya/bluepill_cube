@@ -15,8 +15,8 @@ extern "C" {
 #include <stm32f1xx_hal_rcc.h>
 #include <stm32f1xx_hal_dma.h>
 
-
 extern void (*_stm32adc_callback)();
+void adc_cube_start();
 
 #ifdef __cplusplus
 }

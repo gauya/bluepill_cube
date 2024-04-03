@@ -366,6 +366,8 @@ void setup() {
 
   gLED.init();
 
+  adc_cube_start();
+  
 #if 0
 ttt();
 #else
