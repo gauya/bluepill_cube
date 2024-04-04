@@ -6,7 +6,6 @@
  */
 
 
-#include "stm32f1xx_it.h"
 #include "gserial.h"
 #include <stdarg.h>
 #include "ggpio.h"

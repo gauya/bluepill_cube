@@ -8,9 +8,10 @@
 #ifndef _GSERIAL_H_
 #define _GSERIAL_H_
 
-#include "app.h"
+//#include "app.h"
 #include "gfifo.h"
 #include "usbd_cdc_if.h"
+#include "main.h"
 
 #define GDEBUG_BUFLEN	256
 #define MAX_SERIAL_NUM	6

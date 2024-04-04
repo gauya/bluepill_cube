@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <gproc.h>
 #include <glog.h>
-#include <app_etc.h>
 #include <giwdg.h>
 
 typedef struct {

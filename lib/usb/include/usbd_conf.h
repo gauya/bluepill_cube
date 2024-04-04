@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "main.h"
+//#include "main.h"
 #include "stm32f1xx.h"
 #include "stm32f1xx_hal.h"
 

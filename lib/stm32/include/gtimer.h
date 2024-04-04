@@ -12,9 +12,8 @@ extern "C" {
 #endif
 
 #include "stm32f1xx_hal.h"
-//#include "stm32f4xx_hal_tim.h"
-//#include "stm32_hal_tim.h"
 #include "stm32f103xb.h"
+#include "main.h"
 #include "ggpio.h"
 
 #ifdef __cplusplus

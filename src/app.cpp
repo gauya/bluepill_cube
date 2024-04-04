@@ -1,5 +1,5 @@
 
-#include <app_etc.h>
+#include <app.h>
 #include <gadc.h>
 #include <giwdg.h>
 #include <ggpio.h>

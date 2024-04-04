@@ -1,4 +1,3 @@
-#include "app.h" 
 #include "gtimer.h"
 #include "gproc.h"
 #include <math.h>

@@ -5,7 +5,6 @@ extern "C" {
 #include <giwdg.h>
 #include <stm32f1xx_hal.h>
 #include <stm32f1xx_ll_iwdg.h>
-#include "main.h"
 #include "glog.h"
 
 IWDG_HandleTypeDef hiwdg;
