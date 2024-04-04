@@ -1,6 +1,5 @@
 #include "ghul.h"
 
-#if 1
 int HUL_ADC_clk_enable(ADC_TypeDef *adc) {
 #if defined(ADC1)
   if (adc == ADC1) {
@@ -24,8 +23,8 @@ int HUL_ADC_clk_enable(ADC_TypeDef *adc) {
   return 0;
 }
 
-int HUL_GPIO_clk_enable(GPIO_TypeDef *gpio) {
-  
+int HUL_GPIO_clk_enable(GPIO_TypeDef *gpio) 
+{
   if( ! IS_GPIO_ALL_INSTANCE(gpio) ) 
     return 0;
 #if defined(GPIOA)
@@ -76,13 +75,11 @@ int HUL_GPIO_clk_enable(GPIO_TypeDef *gpio) {
     return 1;
   }
 #endif
-
-
   return 0;
 }
 
 int HUL_ADC_nvic(ADC_TypeDef *adc, int enable) {
-#if 1 // F1  
+#ifdef STM32F1 // F1  
   if( ADC1 == adc ) {
     if( enable ) {
       HAL_NVIC_SetPriority(ADC1_2_IRQn, 0, 0); // M4 ADC_IRQn
@@ -93,7 +90,7 @@ int HUL_ADC_nvic(ADC_TypeDef *adc, int enable) {
       return 0;
     }
   } else return -1;
-#else 
+#elif defined STM32F4 
   if( ADC1 == adc ) {
     if( enable ) {
       HAL_NVIC_SetPriority(ADC1_IRQn, 0, 0); // M4 ADC_IRQn
@@ -109,7 +106,7 @@ int HUL_ADC_nvic(ADC_TypeDef *adc, int enable) {
 }
 
 int HUL_DMA_nvic(ADC_TypeDef *adc, int enable) {
-#if 1 // F1  
+#if STM32F1 // F1  
   if( ADC1 == adc ) {
     if( enable ) {
       __HAL_RCC_DMA1_CLK_ENABLE();
@@ -124,7 +121,7 @@ int HUL_DMA_nvic(ADC_TypeDef *adc, int enable) {
     }
 
   } else return -1;
-#else // F4
+#elif defined STM32F4 // F4
   if( ADC1 == adc ) {
     if( enable ) {
       __HAL_RCC_DMA2_CLK_ENABLE();
@@ -140,4 +137,3 @@ int HUL_DMA_nvic(ADC_TypeDef *adc, int enable) {
 #endif
 
 }
-#endif
