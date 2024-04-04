@@ -105,7 +105,7 @@ int HUL_ADC_nvic(ADC_TypeDef *adc, int enable) {
   return 0;
 }
 
-int HUL_DMA_nvic(ADC_TypeDef *adc, int enable) {
+int HUL_ADC_DMA_nvic(ADC_TypeDef *adc, int enable) {
 #if STM32F1 // F1  
   if( ADC1 == adc ) {
     if( enable ) {

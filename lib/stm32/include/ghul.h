@@ -15,7 +15,7 @@ extern "C" {
 int HUL_ADC_clk_enable(ADC_TypeDef *adc);
 int HUL_GPIO_clk_enable(GPIO_TypeDef *gpio);
 int HUL_ADC_nvic(ADC_TypeDef *adc, int enable);
-int HUL_DMA_nvic(ADC_TypeDef *adc, int enable);
+int HUL_ADC_DMA_nvic(ADC_TypeDef *adc, int enable);
 
 #ifdef __cplusplus 
 }

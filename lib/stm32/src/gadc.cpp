@@ -44,7 +44,7 @@ void HAL_DMA_TransferCpltCallback(DMA_HandleTypeDef *hdma) {
   //dma_finish2++;
 }
 
-#if 1 // F1
+#ifdef STM32F1 // F1
 void ADC1_2_IRQHandler(void) {
   HAL_ADC_IRQHandler(&hadc1); 
 }
@@ -53,7 +53,7 @@ void DMA1_Channel1_IRQHandler(void) {
   HAL_DMA_IRQHandler(&hdma_adc1);
   dma_finish2++;
 }
-#else
+#elif defined STM32F4 
 void ADC_IRQHandler(void) {
   HAL_ADC_IRQHandler(&hadc1);
 }
@@ -832,7 +832,7 @@ void stm32adcdma::setup(ADC_TypeDef *adc, struct adc_channels *ac, void (*intrf)
 
   HUL_ADC_nvic(get_handle()->Instance, 1);
   HUL_ADC_clk_enable(adc);
-  HUL_DMA_nvic(adc,1);
+  HUL_ADC_DMA_nvic(adc,1);
 
 #if 1  // F1
 
