@@ -9,7 +9,6 @@
 #ifndef LIB_INC_APP_ETC_H_
 #define LIB_INC_APP_ETC_H_
 
-#include "main.h"
 #include "gparse.h"
 #include "glog.h"
 #include "gtty.h"
@@ -21,13 +20,17 @@
 
 int add_proc(const char*pn, void (*f)(const char*), int timer=-1, int act=1);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+void setup();
+void loop();
 
 void command_list(const char*str);
 //void scadule_traffic(const char*);
 void system_reset(const char *s);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #ifdef __cplusplus
 }

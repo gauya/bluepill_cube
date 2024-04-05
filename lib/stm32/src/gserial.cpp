@@ -193,9 +193,7 @@ int init_cdc(int id) {
 /*
 	s->_rx_fifo = (gfifo_t*)new[sizeof(gfifo_t)];
 	fifo_set(s->_rx_fifo,0,0,0);
-*/
 
-/*
 	s->getc = cdc_getc;
 	s->putc = cdc_putc;
 	s->write = cdc_write;

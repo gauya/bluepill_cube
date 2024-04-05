@@ -1,9 +1,8 @@
 #include "main.h"
+#include "app.h"
 
 void SystemClock_Config(void);
 
-extern void setup();
-extern void loop();
 
 int main(void)
 {
