@@ -7,13 +7,11 @@
 
 #define ADCTEST
 
-ggpio gLED(GPIOC,13); 
 
 void loop_led() {
+  static ggpio gled(GPIOC,13); 
   static int cnt=0;
-  gLED.toggle();
-
-  //digitalWrite(ledPin, sw);
+  gled.toggle();
 
   gdebug(5,"[%d]\n",cnt++);
 }
@@ -187,9 +185,6 @@ void testadc() {
 #endif
 
 void test4() {
-//  int val = Serial.read();
-//  if( val == -1 ) return;
-//  Serial.write(val); // echo
 }
 
 void test5(const char*s) {
@@ -319,7 +314,7 @@ void rtled() {
   f++;
   if(f > 200) {
     f=0;
-    gLED.toggle();
+  //  gled.toggle();
   }
 }
 
@@ -329,7 +324,6 @@ void cli_test2(const char*s) {
 
 extern gadc __adc1;
 extern void pendmain(void);
-extern "C" void ttt(void);
 
 ggpio et;
 uint32_t _uptime, _etime, _rise=0,_fall=0;
@@ -364,13 +358,6 @@ void setup() {
   
   ERROR_LOG("start");
 
-  gLED.init();
-
-  adc_cube_start();
-  
-#if 0
-ttt();
-#else
   gt = new gtimer(TIM2,625,127,timer_func);
   gt->start();
   gpio_t pwmg1 = {GPIOA,3};
@@ -382,13 +369,21 @@ ttt();
   gpio_t pwmg2 = {GPIOB,1};
   gt3->pwm(4,300,TIM_OCMODE_PWM1,&pwmg2);
   gt3->pwm_start(4);
-#endif
 
   //pendmain();
 
   et.init(GPIOB,5,eGPIO_EXTI_RISING_FALLING); //eGPIO_EXTI_FALLING); //eGPIO_EXTI_RISING_FALLING);
   et.attach(etfunc,0);
 
+#if 1
+  adc_cube_start();
+  __disable_irq();
+  if( HAL_ADCEx_Calibration_Start(&hadc1) != HAL_OK ) {
+    ERROR_LOG("adc calibration fail");
+  }
+  __enable_irq();
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
+#else
   adc_channels ac[] = {
     { ADC_CHANNEL_0, ADC_SAMPLETIME_55CYCLES_5,GPIOA, 0,},
     { ADC_CHANNEL_1, ADC_SAMPLETIME_55CYCLES_5,GPIOA, 1,},
@@ -399,17 +394,9 @@ ttt();
     { -1,0 }
   };
 
-#if 0
 //  __adc1.setup(ADC1,ac);
   gadc adc(ADC1, ac);
   adc.start();
-#else
-  __disable_irq();
-  if( HAL_ADCEx_Calibration_Start(&hadc1) != HAL_OK ) {
-    ERROR_LOG("adc calibration fail");
-  }
-  __enable_irq();
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);
 #endif
 
 

@@ -108,7 +108,7 @@ ggpio::ggpio(GPIO_TypeDef *g, int pin, uint32_t mode, int pullup, int speed) {
     _speed = (speed == 0 || speed == 1 || speed == 3)? speed : 2 ;
     _pullup = (pullup == 1 || pullup == 2)? pullup: 0;
 
-    //init();
+    init();
 }
 
 ggpio::ggpio() {
@@ -149,6 +149,8 @@ void ggpio::init(GPIO_TypeDef *g, int pin, uint32_t mode, int pullup, int speed)
 }
 
 void ggpio::init() {
+    if( _inited ) 
+        return;
     if( !this->port || this->pin < 0 || this->pin > 15) {
         this->pin = -1;
         _flag = 0;
