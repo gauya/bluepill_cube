@@ -62,7 +62,7 @@ __attribute__((weak)) void command_list(const char*arg) {
 }
 
 static int default_inner_func(int c,const char *s) {
-	int lev;
+	int lev = log_level();
 	switch(c) {
 		case eDIRECT:
 			return -100;
@@ -71,11 +71,9 @@ static int default_inner_func(int c,const char *s) {
 			break;
 		case eLOGLEVEL:
 			s = whitespace_skip(s);
-			if( !s )
-				lev = log_level();
-			else
-				lev = log_level() = stoi(s);
-			gdebug(-10,"log level is [%d]\n",lev);
+			if( *s )
+				log_level() = stoi(s);
+			gdebug(-10,"log level is [%d -> %d]\n",lev, log_level());
 			break;
 		default:;
 	}
