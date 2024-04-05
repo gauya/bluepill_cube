@@ -20,10 +20,6 @@ int add_proc(const char*pn, void (*f)(const char*), int timer, int act) { // whe
 	return no;
 }
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void scadule_pre() {
 	//
 }
@@ -212,6 +208,11 @@ void dis_tinycalc(const char *str) {
       gprintf("%s = %ld\n", str, (long)v);
    }
 }
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 #ifdef __cplusplus
