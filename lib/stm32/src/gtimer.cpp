@@ -196,7 +196,7 @@ void HUL_GPIO_clk_enable(GPIO_TypeDef *g) {
     if( g == GPIOD ) {
         __HAL_RCC_GPIOD_CLK_ENABLE();
     } else {
-        ERROR_LOG("gpio is not ack") ;
+        error_log("gpio is not ack") ;
     }
     return;
 }
@@ -217,13 +217,13 @@ void gtimer::set(TIM_TypeDef *tim, uint32_t ARR, uint32_t PSC, void (*f)(TIM_Han
     _ht->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE; //TIM_AUTORELOAD_PRELOAD_DISABLE; // TIM_AUTORELOAD_PRELOAD_ENABLE;
 
     if (HAL_TIM_Base_Init(_ht) != HAL_OK) {
-        ERROR_LOG("timer baseinit");
+        error_log("timer baseinit");
     }
 
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     if (HAL_TIM_ConfigClockSource(_ht, &sClockSourceConfig) != HAL_OK) {
-        ERROR_LOG("timer config clock source");
+        error_log("timer config clock source");
     }
 
     HUL_TIM_clk_enable(_ht->Instance);
@@ -267,7 +267,7 @@ void gtimer::stop() {
 
 void gtimer::pwm(int channel, uint32_t pulse, uint32_t mode, gpio_t *gpio_ch) {
     if (channel < 1 || channel > 4) {
-        ERROR_LOG("pwm channel over range");
+        error_log("pwm channel over range");
         return;
     }
     uint32_t ch = (channel == 1) ? TIM_CHANNEL_1 : (channel == 2) ? TIM_CHANNEL_2
@@ -287,7 +287,7 @@ void gtimer::pwm(int channel, uint32_t pulse, uint32_t mode, gpio_t *gpio_ch) {
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(_ht, &sMasterConfig) != HAL_OK) {
-        ERROR_LOG("timer MasterConfigSync");
+        error_log("timer MasterConfigSync");
     }
 
     TIM_OC_InitTypeDef sConfigOC;
@@ -302,7 +302,7 @@ void gtimer::pwm(int channel, uint32_t pulse, uint32_t mode, gpio_t *gpio_ch) {
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     if (HAL_TIM_PWM_ConfigChannel(_ht, &sConfigOC, ch) != HAL_OK) {
-        ERROR_LOG("timer pwm");
+        error_log("timer pwm");
     }
 #endif
     if(channel==1) { _ch1 = 1;} else
@@ -325,7 +325,7 @@ void gtimer::pwm(int channel, uint32_t pulse, uint32_t mode, gpio_t *gpio_ch) {
 
 void gtimer::pwm_start(int channel) {
     if (channel < 1 || channel > 4) {
-        ERROR_LOG("pwm channel over range");
+        error_log("pwm channel over range");
         return;
     }
     uint32_t ch = (channel == 1) ? TIM_CHANNEL_1 : (channel == 2) ? TIM_CHANNEL_2
@@ -336,7 +336,7 @@ void gtimer::pwm_start(int channel) {
 
 void gtimer::pwm_stop(int channel) {
     if (channel < 1 || channel > 4) {
-        ERROR_LOG("pwm channel over range");
+        error_log("pwm channel over range");
         return;
     }
     uint32_t ch = (channel == 1) ? TIM_CHANNEL_1 : (channel == 2) ? TIM_CHANNEL_2

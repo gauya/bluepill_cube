@@ -19,11 +19,11 @@ extern "C" {
 
 void gdebug(int lev, const char* fmt, ...);
 
-#define ERROR_LOG(str) error_log(str, __FILE__, __FUNCTION__, __LINE__) 
-#define ERROR_TIMELOG(str) error_log2(str, __FILE__, __FUNCTION__, __LINE__) 
+#define error_log(str) error_log_funcline(str, __FILE__, __FUNCTION__, __LINE__) 
+#define error_log2(str) error_log2_funcline(str, __FILE__, __FUNCTION__, __LINE__) 
 
-void error_log( const char *msg, const char *file, const char *func, int line );
-void error_log2( const char *msg, const char *file, const char *func, int line );
+void error_log_funcline( const char *msg, const char *file, const char *func, int line );
+void error_log2_funcline( const char *msg, const char *file, const char *func, int line );
 
 int __io_putchar(int ch);
 int __io_getchar(void);

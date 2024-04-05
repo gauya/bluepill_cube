@@ -42,7 +42,7 @@ void USART2_IRQHandler(void) {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	serial_info_t *s;
 	if( (s = _get_serial(huart)) == 0 ) {
-		ERROR_LOG("get serial nok");
+		error_log("get serial nok");
 		return ; // internal error
 	}
 
@@ -63,12 +63,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   if(huart->Instance==USART1) {
-  /* USER CODE BEGIN USART1_MspInit 0 */
-
-  /* USER CODE END USART1_MspInit 0 */
-    /* Peripheral clock enable */
     __HAL_RCC_USART1_CLK_ENABLE();
-
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**USART1 GPIO Configuration
     PA9     ------> USART1_TX
@@ -93,9 +88,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     /* USART1 interrupt Init */
     HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
-  /* USER CODE BEGIN USART1_MspInit 1 */
-
-  /* USER CODE END USART1_MspInit 1 */
   }
 }
 

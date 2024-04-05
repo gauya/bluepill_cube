@@ -65,7 +65,7 @@ void test_adc_loop() {
   while(1) {
     if( adc_mode != 1 ) {
       if(HAL_ADC_Start(&hadc1) != HAL_OK) {
-        ERROR_LOG("adc start");
+        error_log("adc start");
       };
       HAL_Delay(1);
     }
@@ -84,7 +84,7 @@ void test_adc_loop() {
 void test_adc() {
     if( adc_mode != 1 ) {
       if(HAL_ADC_Start(&hadc1) != HAL_OK) {
-        ERROR_LOG("adc start");
+        error_log("adc start");
       };
       HAL_Delay(1);
     }
@@ -358,7 +358,7 @@ void setup() {
 // ---------------------------------------------------------
   log_level(2);
   
-  ERROR_LOG("start");
+  error_log("start");
 
   gt = new gtimer(TIM2,625,127,timer_func);
   gt->start();
@@ -381,7 +381,7 @@ void setup() {
   adc_cube_start();
   __disable_irq();
   if( HAL_ADCEx_Calibration_Start(&hadc1) != HAL_OK ) {
-    ERROR_LOG("adc calibration fail");
+    error_log("adc calibration fail");
   }
   __enable_irq();
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_buffer, DMA_BUFFER_SIZE);

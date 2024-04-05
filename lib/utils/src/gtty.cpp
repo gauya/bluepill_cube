@@ -41,7 +41,10 @@ int direct_escape_key = 0x3; // CTRL+C
 static uint8_t next_cmdfunc_no = 0;
 
 __attribute__((weak)) void help_tty_msg(void) {
-	gputs("ls -l\n... there is no help doc yet\n");
+	gputs("ls [-l]\n"
+	"log [n]\n"
+	"ps ... "
+	"\n");
 }
 
 void tty_inner_cmd_list() {

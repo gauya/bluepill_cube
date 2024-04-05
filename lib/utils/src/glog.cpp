@@ -61,12 +61,12 @@ void gdebug(int lev, const char* fmt, ...) {
 	return;
 }
 
-void error_log( const char *msg, const char *file, const char *func, int line) {
+void error_log_funcline( const char *msg, const char *file, const char *func, int line) {
 	gdebug(0, "[%s(%s):%d] %s\n", file, func, line,msg);
 }
 
 #include <time.h>
-void error_log2( const char *msg, const char *file, const char *func, int line) {
+void error_log2_funcline( const char *msg, const char *file, const char *func, int line) {
 	time_t now;
 	char buf[24];
 
