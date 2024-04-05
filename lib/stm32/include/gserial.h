@@ -8,10 +8,8 @@
 #ifndef _GSERIAL_H_
 #define _GSERIAL_H_
 
-//#include "app.h"
-#include "gfifo.h"
-#include "usbd_cdc_if.h"
 #include "main.h"
+#include "gfifo.h"
 
 #define GDEBUG_BUFLEN	256
 #define MAX_SERIAL_NUM	6
@@ -60,7 +58,6 @@ int gputs(const char* str,int fd=0);
 int gwrite(uint8_t *data, uint16_t len,int fd=0);
 
 int init_uart(int baud, USART_TypeDef *uart, int id=-1);
-int init_cdc(int id=-1);
 int init_serial(int baud=115200,USART_TypeDef *uart=USART1);
 
 #ifdef __cplusplus
@@ -70,8 +67,13 @@ extern "C" {
 int ugetc();
 int uputc(int ch);
 
+#ifdef USB_SERIAL
+
+int init_cdc(int id=-1);
 int cdc_getc();
 int cdc_putc(int ch);
+
+#endif
 
 int __io_putchar(int ch);
 int __io_getchar();

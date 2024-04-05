@@ -9,7 +9,7 @@
 #ifndef LIB_INC_APP_ETC_H_
 #define LIB_INC_APP_ETC_H_
 
-//#include "app.h"
+#include "main.h"
 #include "gparse.h"
 #include "glog.h"
 #include "gtty.h"
@@ -28,7 +28,6 @@ extern "C" {
 void command_list(const char*str);
 //void scadule_traffic(const char*);
 void system_reset(const char *s);
-
 
 #ifdef __cplusplus
 }

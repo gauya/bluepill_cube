@@ -1,6 +1,7 @@
 #include "gadc.h"
 #include <glog.h>
 #include "ghul.h"
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -550,7 +551,7 @@ int gadc::read(uint16_t *buf) {
   if( !_data_ready || !buf ) {
     return -1;
   }
-  memmove(buf, _outbuf, sizeof(_outbuf[0]) * channel_num());
+  ::memmove(buf, _outbuf, sizeof(_outbuf[0]) * channel_num());
 
   _data_ready = 0;
   return channel_num();

@@ -10,6 +10,11 @@
 #include <stdarg.h>
 #include "ggpio.h"
 #include "glog.h"
+#include <string.h>
+
+#ifdef USB_SERIAL
+#include "usbd_cdc_if.h"
+#endif
 
 serial_info_t __gsi[MAX_SERIAL_NUM] = {0,};
 
@@ -28,7 +33,6 @@ extern "C" {
 void USART1_IRQHandler(void) {
   HAL_UART_IRQHandler(&huart1);
 }
-
 
 void USART2_IRQHandler(void) {
   HAL_UART_IRQHandler(&huart2);
@@ -237,12 +241,14 @@ int __io_putchar(int ch) {
 	if(get_console()->_type == 0) {
 		if( HAL_UART_Transmit(get_console()->Handle, (uint8_t*)&ch,1,HAL_MAX_DELAY) != HAL_OK)
 		return -1;
+#ifdef USB_SERIAL	
 	} else { // USB
 		get_console()->_tx_ch = ch;
 		int to_cnt = 0;
 		while( CDC_Transmit_FS((uint8_t*)&get_console()->_tx_ch, 1) == USBD_BUSY) {
 			if(to_cnt++ > 100) return -1;
 		}
+#endif		
 	}
 	return ch;
 }
@@ -257,9 +263,13 @@ int __io_getchar() {
 		return get_console()->rx_ch;
 #endif
 	}
+	
+#ifdef USB_SERIAL	
 	else if(get_console()->_type == 1) {
 		ch = cdc_getc();
 	}
+#endif
+
 	return ch;
 }
 
@@ -268,9 +278,11 @@ int _write(int32_t file, uint8_t *ptr, int32_t len) {
 		if( HAL_UART_Transmit(get_console()->Handle, (uint8_t*)ptr,len,HAL_MAX_DELAY) != HAL_OK)
 			return -1;
 	}
+#ifdef USB_SERIAL	
 	else if(get_console()->_type == 1) {
 		CDC_Transmit_FS(ptr, len);
 	}
+#endif
 	return len;
 }
 
@@ -304,6 +316,8 @@ int uart_putc( int ch ) {
 
 extern gfifo_t cdc_rx_fifo;
 
+#ifdef USB_SERIAL	
+
 int cdc_getc() {
 	// _default_cdc_id 
 	return  fifo_getc(&cdc_rx_fifo);
@@ -318,19 +332,18 @@ int cdc_putc(int ch) {
 	}
 	return ch;
 }
+#endif
 
 int ggetc(int fd) {
 	serial_info_t*s = _get_serial_byid(fd);
 	if(s && s->_inited) {
-#if 0
-		return fifo_getc(s->_rx_buf);
-#else
 		if(s->_type == 0) {
 			return fifo_getc(s->_rx_buf);
+#ifdef USB_SERIAL	
 		} else {
 			return cdc_getc();
-		}
 #endif
+		}
 	}
 	return -1;
 }
@@ -342,8 +355,10 @@ int gputc(int ch,int fd) {
 			s->_tx_ch = ch;
 			if( HAL_UART_Transmit(get_console()->Handle, (uint8_t*)&s->_tx_ch,1,HAL_MAX_DELAY) != HAL_OK)
 			return -1;
+#ifdef USB_SERIAL	
 		} else {
 			return cdc_putc(ch);
+#endif	
 		}
 	}
 	return -1;
@@ -355,12 +370,14 @@ int gputs(const char* str,int fd) {
 		if(s->_type == 0) {
 			if( HAL_UART_Transmit(get_console()->Handle, (uint8_t*)str,strlen(str),HAL_MAX_DELAY) != HAL_OK)
 				return -1;
+#ifdef USB_SERIAL	
 		} else {
 			int to_cnt = 0;
 			while( CDC_Transmit_FS((uint8_t*)str, strlen(str)) == USBD_BUSY) {
 				if(to_cnt++ > 100) return -1;
 			}
 //		return cdc_write((uint8_t*)str, strlen(str));
+#endif
 		}
 		return 0;
 	}
@@ -373,12 +390,15 @@ int gwrite(uint8_t *data, uint16_t len,int fd) {
 		if(s->_type == 0) {
 			if( HAL_UART_Transmit(get_console()->Handle, data,len,HAL_MAX_DELAY) != HAL_OK)
 			return -1;
+#ifdef USB_SERIAL	
 		} else {
 			int to_cnt = 0;
 			while( CDC_Transmit_FS(data,len) == USBD_BUSY) {
 				if(to_cnt++ > 100) return -1;
 			}
+#endif
 		}
+
 	}
 	return -1;
 }

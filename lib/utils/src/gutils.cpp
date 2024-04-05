@@ -114,7 +114,7 @@ gam::gam(int no=0, int *cs=0) {
 	_len = no;
 	_gs = new gavg_t[_len];
 
-	for( int i; i < _len; i++ ) {
+	for( uint16_t i=0; i < _len; i++ ) {
 		if(cs) {
 			_gs[i].cb = *cs++;
 		} else {
