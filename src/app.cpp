@@ -4,6 +4,7 @@
 #include <giwdg.h>
 #include <ggpio.h>
 #include <gtimer.h>
+#include "gflash.h"
 
 #define ADCTEST
 
@@ -105,6 +106,7 @@ void test_adc() {
 
 void test0(const char *msg) 
 {
+  flash_test();
 #ifdef GSTR_TEST
   gstr_test();
 #endif
@@ -399,12 +401,12 @@ void setup() {
   adc.start();
 #endif
 
-
   set_tty_func("ps",ps );
   set_tty_func("time",cli_test2);
   set_tty_func("str",strtestf);
   set_tty_func("ls",command_list);
   set_tty_func("test",test0);
+  set_tty_func("ca",dis_tinycalc);
 
   add_pfn(1000, loop_led, "led blink");
   add_pfn(100,test1,"N1");

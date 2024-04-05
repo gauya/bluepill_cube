@@ -79,7 +79,7 @@ block_info_t get_block(const char **s, char *buf, size_t bsize, int step);
 block_type_t *get_blktype(const char *s);
 block_type_t *get_blktype(int idx);
 const char *get_token(const char *s, char *buf, size_t blen);
-const char *get_parse(const char *s, char *buf, size_t bsize, ptoken_t *ptoken=0);
+const char *get_parse_token(const char *s, char *buf, size_t bsize, ptoken_t *ptoken=0);
 
 class gparse : public gstr {
 

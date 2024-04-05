@@ -26,6 +26,7 @@ void loop();
 void command_list(const char*str);
 //void scadule_traffic(const char*);
 void system_reset(const char *s);
+void dis_tinycalc(const char *s);
 
 #ifdef __cplusplus
 extern "C" {

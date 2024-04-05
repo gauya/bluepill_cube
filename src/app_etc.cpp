@@ -124,7 +124,7 @@ double tinycalc(const char *str) {
 	auto help = [] () {
 		gdebug(log_level(),"use operator, [+-*/%!^()]\n"); };
 
-	str = get_parse( str, buf, sizeof(buf)-1, &pt);
+	str = get_parse_token( str, buf, sizeof(buf)-1, &pt);
 	if(!str) return v;
 
 	if(pt.etype == eBLK && pt.subtype == eBLOCK) {
@@ -137,7 +137,7 @@ double tinycalc(const char *str) {
 	}
 
 	while(*str) {
-		str = get_parse( str, buf, sizeof(buf)-1, &pt);
+		str = get_parse_token( str, buf, sizeof(buf)-1, &pt);
 		if(pt.etype != eOP) {
 			if(pt.etype == eNUM) v += stof(buf);
 //			help();
@@ -148,7 +148,7 @@ double tinycalc(const char *str) {
 			return factorial(v);
 		strcpy(ops,buf);
 
-		str = get_parse( str, buf, sizeof(buf)-1, &pt);
+		str = get_parse_token( str, buf, sizeof(buf)-1, &pt);
 		if(!str) break;
 
 		if(pt.etype == eBLK && pt.subtype == eBLOCK) {
