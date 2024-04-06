@@ -94,6 +94,7 @@ public:
   int read(uint16_t *buf); // buf length = chs
 };
 
+#if 0
 class stm32adc {
 private:
 protected:
@@ -172,5 +173,6 @@ public:
     uint16_t *read();
 
 };
+#endif // 
 
 #endif // __GADC_H__

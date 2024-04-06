@@ -41,37 +41,6 @@ void timer_func(TIM_HandleTypeDef *h) {
 
 #endif // STM32F4, STM32F1
 
-extern ADC_HandleTypeDef hadc1;
-extern DMA_HandleTypeDef hdma_adc1;
-extern int adc_completed;
-extern int dma_finish1;
-extern int dma_finish2;
-extern int adc_mode;
-
-#if 0
-#define DMA_BUFFER_SIZE 7
-uint16_t adc_buffer[DMA_BUFFER_SIZE*2];
-
-void test_adc() {
-    if( adc_mode != 1 ) {
-      if(HAL_ADC_Start(&hadc1) != HAL_OK) {
-        error_log("adc start");
-      };
-      HAL_Delay(1);
-    }
-    if( adc_completed || dma_finish1 || dma_finish2 ) {
-      for( int i=0;i < DMA_BUFFER_SIZE; i++ ) {
-        gdebug(2,"%5d ",adc_buffer[i]);
-      }
-      float temperature = (adc_buffer[0] / 4095.0) * 3.3;
-//      float temperature = (adc_buffer[0] * 4095.0) / 3.3;
-            temperature = (temperature - V25) / AVG_SLOPE + 25.0;
-      gdebug(2, " (%d,%d,%d  (%d) %.3fC)\n",adc_completed,dma_finish1,dma_finish2, timer_cnt, temperature);
-      adc_completed = dma_finish1 = dma_finish2 = timer_cnt = 0;
-  }
-}
-#endif
-
 #ifdef GSTR_TEST
   extern void gstr_test();
 #endif
@@ -110,37 +79,19 @@ void adc_temp_vref(uint16_t t, uint16_t v) {
     double Temperature = (Vsense - V25) / AVG_SLOPE + 25.0; // 
 
     gdebug(2,"t/v[ %d,%d ]  Vref = [%.2fV]      Temp = [%.2fC] [%d][%d] ",t,v,VrefInt, Temperature, gt->cnt(),timer_cnt);
+
+#if (ADC_TEST==1) 
     gdebug(2,"(%d,%d,%d)\n",adc_completed,dma_finish1,dma_finish2);
+#else
+    gdebug(2,"\n");
+#endif
 }
 
 #if (ADC_TEST==1) 
-
-stm32adcdma adc;
-int dma_completed;
-
-void adc_cb() {
-  dma_completed++;
-}
-
-void testadc() {
-  uint16_t val[18] = {0,};
-
-  if(dma_completed > 0) {
-    //adc.read(val);
-    //gdebug(2,"adc %8d %5d %5d %5d %5d %5d %5d %5d %5d\n", dma_completed, val[0], val[1], val[2], val[3], val[4], val[5], val[6], val[7]);
-    gdebug(2,"adc %8d", dma_completed);
-    for( int i=0; i < adc.channel_num(); i++ ) {
-      gdebug(2,"%6d", val[i]);
-
-    }
-    gdebug(2,"\n");
-    adc_temp_vref(val[5], val[6]);
-    dma_completed = 0;
-  } else {
-    gdebug(2,"adc not completed\n");
-  }
-}
-#else
+extern int adc_completed;
+extern int dma_finish1;
+extern int dma_finish2;
+#endif
 
 extern gadc __adc1;
 
@@ -159,10 +110,10 @@ void testadc() {
   adc_temp_vref(val[5], val[6]);
 
   // test
+#if (ADC_TEST==1) 
   adc_completed = dma_finish1 = dma_finish2 = 0;
+#endif
 }
-
-#endif // ADC_TEST
 
 void test4() {
 }
