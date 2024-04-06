@@ -1,14 +1,28 @@
 #ifndef __GADC_H__
 #define __GADC_H__
 
+#if defined STM32F4 // blackpill
+
+#define VREFINT 1.21
+#define REFVOL 3.3  // typical voltage
+#define ADCMAX 4095.0
+#define V25 0.76        // Voltage at 25C
+#define AVG_SLOPE 0.0025 // 2.5mV/C
+
+#elif defined STM32F1 // bluepill startup 4~10us, sampling 17~ us
+
+#define VREFINT 1.20
+#define REFVOL 3.3  // typical voltage
+#define ADCMAX 4095.0
+#define V25 1.43        // Voltage at 25C
+#define AVG_SLOPE 0.0043 // 4.3mV/C
+
+#endif // STM32F4, STM32F1
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-//#include <stm32yyxx_hal_conf.h>
-//#include <stm32yyxx_ll_adc.h>
-//#include <stm32yyxx_ll_gpio.h>
-//#include <stm32yyxx_ll_rcc.h>
 #include <stm32f1xx_hal.h>
 #include <stm32f1xx_hal_adc.h>
 #include <stm32f1xx_hal_gpio.h>
@@ -17,7 +31,6 @@ extern "C" {
 #include "main.h"
 
 extern void (*_stm32adc_callback)();
-void adc_cube_start();
 
 #ifdef __cplusplus
 }

@@ -21,26 +21,6 @@ void timer_func(TIM_HandleTypeDef *h) {
   timer_cnt++;
 }
 
-// ADC_TEST=1 : dma, else : polling
-#define ADC_TEST  0
-
-#if defined STM32F4 // blackpill
-#define VREFINT 1.21
-#define REFVOL 3.3  // typical voltage
-#define ADCMAX 4095.0
-#define V25 0.76        // Voltage at 25C
-#define AVG_SLOPE 0.0025 // 2.5mV/C
-
-#elif defined STM32F1 // bluepill startup 4~10us, sampling 17~ us
-
-#define VREFINT 1.20
-#define REFVOL 3.3  // typical voltage
-#define ADCMAX 4095.0
-#define V25 1.43        // Voltage at 25C
-#define AVG_SLOPE 0.0043 // 4.3mV/C
-
-#endif // STM32F4, STM32F1
-
 #ifdef GSTR_TEST
   extern void gstr_test();
 #endif
@@ -69,7 +49,8 @@ void test2() {
 }
 
 gcavg avg();  // <-----------
-gtimer *gt=0, *gt3=0;
+
+#define ADC_TEST  0
 
 void adc_temp_vref(uint16_t t, uint16_t v) {
     if(v==0) v=1;
@@ -78,7 +59,7 @@ void adc_temp_vref(uint16_t t, uint16_t v) {
     double Vsense = (VrefInt * t) / ADCMAX;
     double Temperature = (Vsense - V25) / AVG_SLOPE + 25.0; // 
 
-    gdebug(2,"t/v[ %d,%d ]  Vref = [%.2fV]      Temp = [%.2fC] [%d][%d] ",t,v,VrefInt, Temperature, gt->cnt(),timer_cnt);
+    gdebug(2,"t/v[ %d,%d ] Vref=[%.2fV] Temp=[%.2fC]",t,v,VrefInt, Temperature);
 
 #if (ADC_TEST==1) 
     gdebug(2,"(%d,%d,%d)\n",adc_completed,dma_finish1,dma_finish2);
@@ -115,7 +96,10 @@ void testadc() {
 #endif
 }
 
+gtimer *gt=0, *gt3=0;
+
 void test4() {
+  gdebug(2,"Timer gt=%d gt3=%d\n",gt->cnt(),timer_cnt);
 }
 
 void test5(const char*s) {
@@ -225,6 +209,7 @@ void setup() {
   add_pfn(1000, loop_led, "led blink");
   add_pfn(100,test1,"N1");
   add_pfn(10*1000,test2);
+  add_pfn(1000, test4,"timer");
   add_pfn(1200, testadc,"adc read");
   add_rtpfn(15,rtled);
   add_pfn(0,tty,"key in");
