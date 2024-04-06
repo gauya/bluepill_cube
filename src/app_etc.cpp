@@ -49,6 +49,77 @@ void command_list(const char*str) {
 	}
 }
 
+extern void view_proc_all();
+
+void ps_ctrl(const char *s) {
+  // ps 2
+  // ps (all)
+  // ps stop 2,4
+  // ps start 0
+  // ps frq 2.10   no 2 proc set frq = 10
+
+  const char*cmds[] = { "stop","start","frq",0 };
+  char buf[40],tb[10+1];
+  int c,no,val;
+  int dl=10;
+  strcpy(buf,s);
+
+  const char *p = get_token(buf,tb,10);
+  if( p ) {
+    c = instrs(tb,cmds);
+    if( c >= 0 ) {
+      p = get_token(p,tb,10);
+      gdebug(dl,"1. c=%d tb=[%s]\n", c, tb);
+      switch(c) {
+        case 0: // stop
+          if(tb[0]) {
+            val = stol(tb);
+            pfn_stop(val);
+      gdebug(dl,"2. val=%d tb=[%s]\n", val, tb);
+          } else { // error
+
+          }
+          break;
+        case 1: // start
+          if(tb[0]) {
+            val = stol(tb);
+            pfn_start(val);
+      gdebug(dl,"3. val=%d tb=[%s]\n", val, tb);
+          } else { // error
+
+          }
+          break;
+        case 2: // frq
+          if(tb[0]) {
+            no = stol(tb);
+            p = get_token(p,tb,10);
+            if(p && tb[0]) {
+              val = stol(tb);
+              pfn_frq(no,val);
+      gdebug(dl,"4. val=%d tb=[%s]\n", val, tb);
+            } else {
+              // error
+      gdebug(dl,"4-1. tb=[%s]\n", tb);
+            }
+
+          }
+          break;
+        default:;
+      }
+      return;
+    } else { // numeric or error
+      // ps 2
+    }
+  } else {
+    if(tb[0]) {
+      view_proc(stol(tb));
+      return;
+    }
+  }
+  
+  view_proc_all();
+}
+
 #if 0
 
 uint32_t suspicious_looptime = 1000 * 10; // 10ms

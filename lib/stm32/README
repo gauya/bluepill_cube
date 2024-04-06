@@ -1,14 +1,19 @@
-C와 C++을 섞어 쓸때 나오는 linkage 문제들이 있다.
+C와 C++을 섞어 쓸때 나오는 linkage 문제들.
 
-vscode같은 인텔리젠트 컴파일환경이 때로 더 힘들게 한다.
+vscode같은 인텔리센스 컴파일환경이 때로 더 힘들게 한다.
+- 실제 처리할것이 없으면 include path를 빼버리는데 이 때문에 헤더 파일을 못찾는 에러가 나온다. 당연히 쓸데 없는 헤더를 포함시켰으니 그렇다고 볼 수 도 있지만 
 
-C,C++을 따로 만드는게 좋은지 한곳에 두는게 좋은지... 
+C,C++을 따로 만드는것과 한곳에 두는것  
+
+
+// here is C
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // here is C 
+
 #ifdef __cplusplus
 }
 

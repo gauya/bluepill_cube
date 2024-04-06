@@ -175,119 +175,6 @@ void test6() {
   gdebug(2,"-------------------\n");
 }
 
-#include <gstr.h>
-extern void view_proc_all();
-
-void ps(const char *s) {
-  // ps 2
-  // ps (all)
-  // ps stop 2,4
-  // ps start 0
-  // ps frq 2.10   no 2 proc set frq = 10
-
-  const char*cmds[] = { "stop","start","frq",0 };
-  char buf[40],tb[10+1];
-  int c,no,val;
-  int dl=10;
-  strcpy(buf,s);
-
-  const char *p = get_token(buf,tb,10);
-  if( p ) {
-    c = instrs(tb,cmds);
-    if( c >= 0 ) {
-      p = get_token(p,tb,10);
-      gdebug(dl,"1. c=%d tb=[%s]\n", c, tb);
-      switch(c) {
-        case 0: // stop
-          if(tb[0]) {
-            val = stol(tb);
-            pfn_stop(val);
-      gdebug(dl,"2. val=%d tb=[%s]\n", val, tb);
-          } else { // error
-
-          }
-          break;
-        case 1: // start
-          if(tb[0]) {
-            val = stol(tb);
-            pfn_start(val);
-      gdebug(dl,"3. val=%d tb=[%s]\n", val, tb);
-          } else { // error
-
-          }
-          break;
-        case 2: // frq
-          if(tb[0]) {
-            no = stol(tb);
-            p = get_token(p,tb,10);
-            if(p && tb[0]) {
-              val = stol(tb);
-              pfn_frq(no,val);
-      gdebug(dl,"4. val=%d tb=[%s]\n", val, tb);
-            } else {
-              // error
-      gdebug(dl,"4-1. tb=[%s]\n", tb);
-            }
-
-          }
-          break;
-        default:;
-      }
-      return;
-    } else { // numeric or error
-      // ps 2
-    }
-  } else {
-    if(tb[0]) {
-      view_proc(stol(tb));
-      return;
-    }
-  }
-  
-  view_proc_all();
-}
-
-void strtest(const char*str, const char* ds, const char* ss) {
-  if(!ds) ds = ",:\n \t/.;"; //__default_delimiter;
-  if(!ss) ss = " \t"; //__default_white_space;
-  int dl=10;
-
-  int token_cnt = 0;
-  int ssz = strlen(str);
-
-  char *buf = new char[ssz*2+1];
-  char **toks = new char*[ssz];
-
-  if( !buf || !toks ) {
-    gdebug(10,"!!!!!!!!! error [new] %d\n",ssz);
-    return;
-  }
-  char *tbp = buf;
-  const char *tp=str;
-
-  while(tp) {
-    tp = get_token(tp,tbp, ssz*2);
-    toks[token_cnt++] = tbp;
-    if(!*tbp || !tp) break;
-
-    gdebug(dl,"tc=%d tbp=[%s]\n", token_cnt,tbp);
-
-    while(*tbp) tbp++;
-    tbp++;
-
-  }
-
-  gdebug(dl,"msg = [%s]\n\ntotal tokens = %d\n", str, token_cnt);
-  for(int i=0; i < token_cnt; i++ ) {
-    gdebug(dl,"%2d : [%s]\n", i, toks[i]);
-  }
-  delete[] buf;
-  delete[] toks;
-}
-
-void strtestf(const char*str) {
-  strtest(str," .:",0);
-}
 
 void rtled() {
   static int f=0;
@@ -378,9 +265,8 @@ void setup() {
   __adc1.start();
 #endif
 
-  set_tty_func("ps",ps );
+  set_tty_func("ps",ps_ctrl );
   set_tty_func("time",cli_test2);
-  set_tty_func("str",strtestf);
   set_tty_func("ls",command_list);
   set_tty_func("test",test0);
   set_tty_func("ca",dis_tinycalc);
