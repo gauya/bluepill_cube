@@ -23,11 +23,21 @@
 extern "C" {
 #endif
 
+#if defined(STM32F1) || defined(BLUEPILL)
 #include <stm32f1xx_hal.h>
 #include <stm32f1xx_hal_adc.h>
 #include <stm32f1xx_hal_gpio.h>
 #include <stm32f1xx_hal_rcc.h>
 #include <stm32f1xx_hal_dma.h>
+
+#elif defined(STM32F4) || defined(BLACKPILL)
+#include <stm32f4xx_hal.h>
+#include <stm32f4xx_hal_adc.h>
+#include <stm32f4xx_hal_gpio.h>
+#include <stm32f4xx_hal_rcc.h>
+#include <stm32f4xx_hal_dma.h>
+#endif
+
 #include "main.h"
 
 extern void (*_stm32adc_callback)();

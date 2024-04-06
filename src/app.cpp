@@ -209,12 +209,12 @@ void setup() {
   add_pfn(1000, loop_led, "led blink");
   add_pfn(100,test1,"N1");
   add_pfn(10*1000,test2);
-  add_pfn(1000, test4,"timer");
-  add_pfn(1200, testadc,"adc read");
+  add_pfn(5000, test4,"timer");
   add_rtpfn(15,rtled);
   add_pfn(0,tty,"key in");
   add_pfn(10000, test6, "elapsed test");
   
+  add_proc("adc", (void (*)(const char *))testadc, 12000);
   add_proc("viewall", (void (*)(const char *))view_proc_all, 60000, 0);
   add_proc("check", test5, 20000, 0);
   

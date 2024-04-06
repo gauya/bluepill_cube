@@ -30,12 +30,16 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   if( hadc->Instance == ADC1 ) {
     __adc1.safedata();
   } else
-  if( hadc->Instance == ADC1 ) {
+  if( hadc->Instance == ADC2 ) {
     __adc2.safedata();
-  } else
-  if( hadc->Instance == ADC1 ) {
+  } 
+#if defined(ADC3)
+  else
+  if( hadc->Instance == ADC3 ) {
     __adc3.safedata();
   }
+#endif
+
 #if (ADC_TEST==1)
   adc_completed++;
 #endif
