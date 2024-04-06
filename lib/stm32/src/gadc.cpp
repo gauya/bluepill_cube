@@ -21,13 +21,22 @@ int adc_mode=1;
 int adc_count=0;
 #endif
 
-gadc __adc1;
+gadc __adc1,__adc2,__adc3;
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
   if( _stm32adc_callback ) {
     _stm32adc_callback();
   }
-  __adc1.safedata();
+
+  if( hadc->Instance == ADC1 ) {
+    __adc1.safedata();
+  } else
+  if( hadc->Instance == ADC1 ) {
+    __adc2.safedata();
+  } else
+  if( hadc->Instance == ADC1 ) {
+    __adc3.safedata();
+  }
   adc_completed++;
   
   if( adc_mode == 1) {
@@ -63,7 +72,7 @@ void DMA2_Stream0_IRQHandler(void) {
 }
 #endif
 
-#if 1 //ADCTEST
+#if (ADC_TEST == 1)
 /**
 * @brief ADC MSP Initialization
 * This function configures the hardware resources used in this example
@@ -273,12 +282,12 @@ void MX_DMA_Init(void)
 
 }
 
-#endif //ADCTEST
-
 void adc_cube_start() {
   MX_DMA_Init();
   MX_ADC1_Init();
 }
+
+#endif //ADC_TEST
 
 #ifdef __cplusplus
 }
@@ -296,7 +305,6 @@ gadc::gadc() { //LSE_STARTUP_TIMEOUT
   _timeout = 1; // ms
   _dmabuf = _outbuf = 0;
   _data_ready = 0;
-  _mode = 0;
 
   _mode = 1; // continuous
 }
@@ -315,7 +323,7 @@ gadc::gadc(ADC_TypeDef *adc, struct adc_channels *ac) {
   _timeout = 1; // ms
   _dmabuf = _outbuf = 0;
   _data_ready = 0;
-  _mode = 0;
+  _mode = 1;
 
   setup();
 }
@@ -328,11 +336,9 @@ gadc::~gadc() {
 
   if( _ha->Instance == ADC1) {
     __HAL_RCC_ADC1_CLK_DISABLE();
-    __HAL_RCC_DMA1_CLK_DISABLE();
   } else
   if( _ha->Instance == ADC2) {
     __HAL_RCC_ADC2_CLK_DISABLE();
-    __HAL_RCC_DMA1_CLK_DISABLE();
   } else {
   }
 
@@ -351,7 +357,10 @@ void gadc::setup() {
 }
 
 void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
-  _status = eADC_NOTSETUP;
+  if( _status != eADC_NOTSETUP ) {
+    error_log("already adc setup");
+    return;
+  }
   _chs = ac;
   _ha = (adc == ADC1)? &hadc1 : (adc == ADC2)? &hadc2: 0;
   if( !_ha ) {
@@ -368,7 +377,7 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
   
   _ha->Init.ScanConvMode = ENABLE;
   _ha->Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  _ha->Init.ContinuousConvMode = DISABLE; //ENABLE;
+  _ha->Init.ContinuousConvMode = ENABLE;
   _ha->Init.DiscontinuousConvMode = DISABLE;
   _ha->Init.DataAlign = ADC_DATAALIGN_RIGHT;
   _ha->Init.NbrOfConversion = channel_cnt;                   // <> _channel_num
@@ -402,11 +411,14 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
     add_channel(_chs+i);
   }
 
+  _dmabuf = new uint16_t[channel_num()*2];
+  _outbuf = new uint16_t[channel_num()*2];
+  
   if( !_dmabuf ) {
-    _dmabuf = new uint16_t[channel_num()*2];
-    _outbuf = new uint16_t[channel_num()*2];
+    error_log("dmabuf alloc fail");
   }
-#if 1  // F1
+
+#if defined STM32F1  // F1
     __HAL_RCC_DMA1_CLK_ENABLE();
 
     HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
@@ -431,7 +443,8 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
       error_log("dma init fail"); //Error_Handler();
     }
 
-#else  // F4
+#elif defined STM32F4  // F4
+
   __HAL_RCC_DMA2_CLK_ENABLE();
   HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
@@ -453,14 +466,14 @@ void gadc::setup(ADC_TypeDef *adc, struct adc_channels *ac) {
 
   hdma_adcp = &hdma_adc1;
 
-#endif  
+#endif // defined STM32F1, STM32F4
 
   if( _ha->Instance == ADC1 ) {
     __HAL_LINKDMA((_ha),DMA_Handle,hdma_adc1);
   } else 
   if( _ha->Instance == ADC2 ) {
     __HAL_LINKDMA((_ha),DMA_Handle,hdma_adc2);
-  } else 
+  } 
 
   HUL_ADC_nvic(_ha->Instance, 1);
 
@@ -534,7 +547,9 @@ int gadc::stop() {
 }
 
 void gadc::safedata() {
-  if( !_dmabuf ) return;
+  if( !_dmabuf ) {
+    return;
+  }
 
   memmove(_outbuf, _dmabuf, channel_num() * sizeof(_outbuf[0]));
   _data_ready = 1;
@@ -549,9 +564,11 @@ int gadc::read(int ch) {
 
 int gadc::read(uint16_t *buf) {
   if( !_data_ready || !buf ) {
+    error_log("adc data_ready is not");
     return -1;
   }
   ::memmove(buf, _outbuf, sizeof(_outbuf[0]) * channel_num());
+
 
   _data_ready = 0;
   return channel_num();
