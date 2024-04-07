@@ -17,6 +17,10 @@ injs025, injs035
 60g metal
 90 - 500us ~ 2500us
 dead band 4us
+
+servo av0
+av0.go(60);
+
 */
 
 // timer 50hz

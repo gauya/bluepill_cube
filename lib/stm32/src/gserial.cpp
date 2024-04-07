@@ -61,31 +61,17 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
 
 void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
   if(huart->Instance==USART1) {
     __HAL_RCC_USART1_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**USART1 GPIO Configuration
-    PA9     ------> USART1_TX
-    PA10     ------> USART1_RX
-    */
 
-   #if 1 // bluepill, blackpill
+   #if defined(BLACKPILL) || defined(BLUEPILL) || defined(STM32F1) 
    	gpio_t tx={ GPIOA,9}, rx={GPIOA,10 };
    #else
    #endif
 
-    GPIO_InitStruct.Pin = (1 << tx.pin); // GPIO_PIN_9;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(tx.port, &GPIO_InitStruct);
+	ggpio gtx(&tx,eGPIO_AFPP, 0, 2), grx(&rx, eGPIO_INPUT, 0, 2);
 
-    GPIO_InitStruct.Pin = (1 << rx.pin); //GPIO_PIN_10;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(rx.port, &GPIO_InitStruct);
-
-    /* USART1 interrupt Init */
     HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
   }

@@ -48,14 +48,13 @@ protected:
 
 public:
 	ggpio(GPIO_TypeDef *g,int pin, uint32_t mode = eGPIO_OUTPP, int pullup = 1, int speed = 2);
+	ggpio(gpio_t *g, uint32_t mode = eGPIO_OUTPP, int pullup = 1, int speed = 2);
 	ggpio();
 	virtual ~ggpio();
 
 	void init(GPIO_TypeDef *g,int pin,uint32_t mode = eGPIO_OUTPP, int pullup = 1, int speed = 2);
 	void init();
 	inline bool isinit() { return (_inited) ? true : false;}
-	//int mode(int mode=-1);
-	// 0:out, 1:in, 2:x 3:adc,4:exti,5:AF(timer,uart,...)
 	int pins_nr();
 	inline bool isvalidpin() { return ( this->pin >= 0 && this->pin <= 15 && ((1 << this->pin) == _mask )); }
 	void deinit();
@@ -69,7 +68,7 @@ public:
 	void toggle();
 	int write(int val);
 
-// write 
+// exti intr 
 	void attach( void (*extif)(uint16_t),int exti=-1,int pullup=-1); // exti=1(rise),2(fall),3(updn) , pullup=1(pullup),2(pulldn) 
 	void detach();
 

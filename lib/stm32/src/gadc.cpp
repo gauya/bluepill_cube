@@ -7,8 +7,8 @@
 extern "C" {
 #endif
 
-DMA_HandleTypeDef hdma_adc1,hdma_adc2;
-ADC_HandleTypeDef hadc1,hadc2;
+DMA_HandleTypeDef hdma_adc1,hdma_adc2,hdma_adc3;
+ADC_HandleTypeDef hadc1,hadc2,hadc3;
 
 #if (ADC_TEST==1)
 int adc_completed = 0;
@@ -360,7 +360,7 @@ int gadc::read(uint16_t *buf) {
 }
 // -----------------------------------------------------------------------------------------------
 
-#if 0
+#if 0 // below is to be deleted
 stm32adc::stm32adc() { //LSE_STARTUP_TIMEOUT
   _channel_num = 0;
   _timeout = 100; // ms

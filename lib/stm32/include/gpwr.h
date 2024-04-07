@@ -15,7 +15,8 @@
 extern "C" {
 #endif
 
-#if 0
+#if 1
+#include "main.h"
 void pwr_sleep_mode(int);
 void pwr_stop_mode();
 void pwr_standby_mode();

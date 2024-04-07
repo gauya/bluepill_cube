@@ -105,7 +105,20 @@ ggpio::ggpio(GPIO_TypeDef *g, int pin, uint32_t mode, int pullup, int speed) {
 
     _flag = 0;
     _mode = mode;
-    _speed = (speed == 0 || speed == 1 || speed == 3)? speed : 2 ;
+    _speed = (speed == 1 || speed == 2 || speed == 3)? speed : 0 ;
+    _pullup = (pullup == 1 || pullup == 2)? pullup: 0;
+
+    init();
+}
+
+ggpio::ggpio(gpio_t *g, uint32_t mode, int pullup, int speed) {
+    this->port = g->port;
+    this->pin = g->pin;
+    this->_mask = (1 << pin );
+
+    _flag = 0;
+    _mode = mode;
+    _speed = (speed == 1 || speed == 2 || speed == 3)? speed : 0 ;
     _pullup = (pullup == 1 || pullup == 2)? pullup: 0;
 
     init();
@@ -114,14 +127,14 @@ ggpio::ggpio(GPIO_TypeDef *g, int pin, uint32_t mode, int pullup, int speed) {
 ggpio::ggpio() {
     this->port = 0;
     this->pin = -1;
-    this->_mask = 0;
+    _mask = 0;
     _flag = 0;
 }
 
 ggpio::~ggpio() {
     // 
     this->port = 0;
-    this->_mask = 0;
+    _mask = 0;
 
     if( _mode == eGPIO_EXTI_RISING_FALLING || _mode == eGPIO_EXTI_RISING  || _mode == eGPIO_EXTI_FALLING ) {
         detach();
@@ -142,8 +155,8 @@ void ggpio::init(GPIO_TypeDef *g, int pin, uint32_t mode, int pullup, int speed)
 
     _flag = 0;
     _mode = mode;
-    _speed = (speed == 0 || speed == 1 || speed == 3)? speed : 2 ;
-    _pullup = (pullup == 1 || pullup == 2)? pullup: 0;
+    _speed = (speed == 1 || speed == 2 || speed == 3)? speed : 0 ; // default slow
+    _pullup = (pullup == 1 || pullup == 2)? pullup: 0; // default nopull
 
     init();
 }
@@ -179,6 +192,9 @@ void ggpio::init() {
             break;
         case eGPIO_INPUT:
             mode = GPIO_MODE_INPUT;
+            break;
+        case eGPIO_AFPP:
+            mode = GPIO_MODE_AF_PP;
             break;
         case eGPIO_ADC:
             mode = GPIO_MODE_ANALOG;
@@ -278,6 +294,8 @@ void ggpio::detach() {
 
     __enable_irq();
 
+//    int irqn = exti_irqn(this->pin);
+//    HAL_NVIC_DisableIRQ( (IRQn_Type)irqn );    
 }
 
 int ggpio::read() {

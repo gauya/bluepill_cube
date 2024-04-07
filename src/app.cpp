@@ -5,6 +5,7 @@
 #include <ggpio.h>
 #include <gtimer.h>
 #include "gflash.h"
+#include "gpwr.h"
 
 void loop_led() {
   static ggpio gled(GPIOC,13); 
@@ -205,6 +206,8 @@ void setup() {
   set_tty_func("ls",command_list);
   set_tty_func("test",test0);
   set_tty_func("ca",dis_tinycalc);
+  set_tty_func("pwr",pwr_mode);
+  set_tty_func("reset",system_reset);
 
   add_pfn(1000, loop_led, "led blink");
   add_pfn(100,test1,"N1");
