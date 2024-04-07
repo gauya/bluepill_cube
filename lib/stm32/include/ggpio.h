@@ -10,7 +10,7 @@
 typedef struct {
 	GPIO_TypeDef *port;
 	uint16_t mask;
-} wgpio_t;
+} gwgpio_t;
 
 typedef struct {
 	GPIO_TypeDef *port;
@@ -82,7 +82,7 @@ public:
 };
 
 
-class gwgpio : public wgpio_t {
+class gwgpio : public gwgpio_t {
 	union {
 		uint16_t        _flag; // b0:1 inited, b1-b3 : 0:out, 1:in, 2:in/out,3:adc,4:exti,5:AF(timer,uart,...)
 		struct {
@@ -97,7 +97,8 @@ class gwgpio : public wgpio_t {
 protected:
 
 public:
-	gwgpio(GPIO_TypeDef *g,uint16_t mask,uint32_t mode = eGPIO_OUTPP, int pullup = 1, int speed = 2);
+	gwgpio(GPIO_TypeDef *g, uint16_t mask,uint32_t mode = eGPIO_OUTPP, int pullup = 1, int speed = 2);
+	gwgpio(gwgpio_t *g, uint32_t mode = eGPIO_OUTPP, int pullup = 1, int speed = 2);
 	gwgpio();
 	virtual ~gwgpio();
 
@@ -131,7 +132,7 @@ public:
 	void detach();
 
 // operator
-	gwgpio &operator=(wgpio_t&);
+	gwgpio &operator=(gwgpio_t&);
 	gwgpio &operator=(gpio_t&);
 };
 

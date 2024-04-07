@@ -2,10 +2,8 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "../bluepill"
 		}
+
 	],
 	"settings": {
 		"files.associations": {

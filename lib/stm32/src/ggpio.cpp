@@ -1,5 +1,6 @@
 #include <ggpio.h>
 #include <glog.h>
+#include <ghul.h>
 #include <stm32f1xx_hal_exti.h>
 
 #ifdef __cplusplus
@@ -171,13 +172,9 @@ void ggpio::init() {
     }
     GPIO_InitTypeDef gi;
 
+
     if( IS_GPIO_ALL_INSTANCE(this->port)) {
-        if( IS_GPIO_ALL_INSTANCE(GPIOA) && (this->port == GPIOA) ) { __HAL_RCC_GPIOA_CLK_ENABLE(); }
-        else if( IS_GPIO_ALL_INSTANCE(GPIOB) && (this->port == GPIOB )) { __HAL_RCC_GPIOB_CLK_ENABLE(); }
-        else if( IS_GPIO_ALL_INSTANCE(GPIOC) && (this->port == GPIOC )) { __HAL_RCC_GPIOC_CLK_ENABLE(); }
-        else if( IS_GPIO_ALL_INSTANCE(GPIOD) && (this->port == GPIOD )) { __HAL_RCC_GPIOD_CLK_ENABLE(); }
-        else if( IS_GPIO_ALL_INSTANCE(GPIOE) && (this->port == GPIOE )) { __HAL_RCC_GPIOE_CLK_ENABLE(); }
-//        else if( IS_GPIO_ALL_INSTANCE(GPIOH) && (this->port == GPIOH )) { __HAL_RCC_GPIOH_CLK_ENABLE(); }
+        HUL_GPIO_clk_enable(this->port);
     } else {
         return ;
     }
@@ -358,7 +355,19 @@ gwgpio::gwgpio(GPIO_TypeDef *g,uint16_t mask,uint32_t mode, int pullup, int spee
     _speed = (speed == 0 || speed == 1 || speed == 3)? speed : 2 ;
     _pullup = (pullup == 1 || pullup == 2)? pullup: 0;
 
-    // init();
+    init();
+}
+
+gwgpio::gwgpio(gwgpio_t *g,uint32_t mode, int pullup, int speed) {
+    this->port = g->port;
+    this->mask = mask;
+
+    _flag = 0;
+    _mode = mode;
+    _speed = (speed == 0 || speed == 1 || speed == 3)? speed : 2 ;
+    _pullup = (pullup == 1 || pullup == 2)? pullup: 0;
+
+    init();
 }
 
 gwgpio::gwgpio() {
@@ -394,13 +403,9 @@ void gwgpio::init(GPIO_TypeDef *g,uint16_t mask,uint32_t mode, int pullup, int s
 void gwgpio::init() {
     GPIO_InitTypeDef gi;
 
+
     if( IS_GPIO_ALL_INSTANCE(this->port)) {
-        if( IS_GPIO_ALL_INSTANCE(GPIOA) && (this->port == GPIOA) ) { __HAL_RCC_GPIOA_CLK_ENABLE(); }
-        else if( IS_GPIO_ALL_INSTANCE(GPIOB) && (this->port == GPIOB )) { __HAL_RCC_GPIOB_CLK_ENABLE(); }
-        else if( IS_GPIO_ALL_INSTANCE(GPIOC) && (this->port == GPIOC )) { __HAL_RCC_GPIOC_CLK_ENABLE(); }
-        else if( IS_GPIO_ALL_INSTANCE(GPIOD) && (this->port == GPIOD )) { __HAL_RCC_GPIOD_CLK_ENABLE(); }
-        else if( IS_GPIO_ALL_INSTANCE(GPIOE) && (this->port == GPIOE )) { __HAL_RCC_GPIOE_CLK_ENABLE(); }
-//        else if( IS_GPIO_ALL_INSTANCE(GPIOH) && (this->port == GPIOH )) { __HAL_RCC_GPIOH_CLK_ENABLE(); }
+        HUL_GPIO_clk_enable(this->port);
     } else {
         return ;
     }
