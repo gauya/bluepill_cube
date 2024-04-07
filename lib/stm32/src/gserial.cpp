@@ -34,9 +34,20 @@ void USART1_IRQHandler(void) {
   HAL_UART_IRQHandler(&huart1);
 }
 
+#if defined(USART2)
+
 void USART2_IRQHandler(void) {
   HAL_UART_IRQHandler(&huart2);
 }
+#endif // USART2
+
+#if defined(USART3)
+
+void USART3_IRQHandler(void) {
+  HAL_UART_IRQHandler(&huart3);
+}
+#endif // USART3
+
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
@@ -71,7 +82,7 @@ gpio_t
 
 int stm32_uart_init(USART_TypeDef *uart, uint32_t speed=115200, gpio_t *tx=0, gpio_t *rx=0) {
 
-#if defined(USART2)
+#if defined(USART1)
   if(uart==USART1) {
     __HAL_RCC_USART1_CLK_ENABLE();
 
