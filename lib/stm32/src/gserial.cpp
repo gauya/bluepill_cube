@@ -59,25 +59,59 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
   	}
 }
 
-void HAL_UART_MspInit(UART_HandleTypeDef* huart)
-{
-  if(huart->Instance==USART1) {
+#if defined(BLACKPILL) || defined(BLUEPILL) || defined(STM32F1) 
+
+gpio_t 
+	_tx[]={{GPIOA,9},0}, 
+	_rx[]={{GPIOA,10},0};
+
+#else
+
+#endif
+
+int stm32_uart_init(USART_TypeDef *uart, uint32_t speed=115200, gpio_t *tx=0, gpio_t *rx=0) {
+
+#if defined(USART2)
+  if(uart==USART1) {
     __HAL_RCC_USART1_CLK_ENABLE();
-    __HAL_RCC_GPIOA_CLK_ENABLE();
 
-   #if defined(BLACKPILL) || defined(BLUEPILL) || defined(STM32F1) 
-   	gpio_t tx={ GPIOA,9}, rx={GPIOA,10 };
-   #else
-   #endif
-
-	ggpio gtx(&tx,eGPIO_AFPP, 0, 2), grx(&rx, eGPIO_INPUT, 0, 2);
+	if( !tx ) tx = &_tx[0];
+	if( !rx ) rx = &_rx[0];
+	ggpio gtx(tx,eGPIO_AFPP, 0, 2), grx(rx, eGPIO_INPUT, 0, 2);
 
     HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
-  }
-}
+  } 
+#endif
 
-static int stm32_uart_init(USART_TypeDef *uart, uint32_t speed=115200, gpio_t *tx=0, gpio_t *rx=0) {
+#if defined(USART2)
+  else
+  if(uart==USART2) {
+    __HAL_RCC_USART2_CLK_ENABLE();
+
+	if( !tx ) tx = &_tx[1];
+	if( !rx ) rx = &_rx[1];
+	ggpio gtx(tx,eGPIO_AFPP, 0, 2), grx(rx, eGPIO_INPUT, 0, 2);
+
+    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
+  }
+#endif // USART2
+
+#if defined(USART3)
+  else
+  if(uart==USART3) {
+    __HAL_RCC_USART3_CLK_ENABLE();
+
+	if( !tx ) tx = &_tx[2];
+	if( !rx ) rx = &_rx[2];
+	ggpio gtx(tx,eGPIO_AFPP, 0, 2), grx(rx, eGPIO_INPUT, 0, 2);
+
+    HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART3_IRQn);
+  } 
+#endif // USART3    
+
   UART_HandleTypeDef *hu;
 
   hu = (uart == USART1)? &huart1 : (uart == USART2)? &huart2 : 0;

@@ -163,4 +163,28 @@ void HUL_TIM_clk_enable(TIM_TypeDef *tim) {
         return;
     }
 #endif
+#ifdef TIM5
+    if (tim == TIM5) {
+        __HAL_RCC_TIM5_CLK_ENABLE();
+        return;
+    }
+#endif
+#ifdef TIM6
+    if (tim == TIM6) {
+        __HAL_RCC_TIM6_CLK_ENABLE();
+        return;
+    }
+#endif
+#ifdef TIM7
+    if (tim == TIM7) {
+        __HAL_RCC_TIM7_CLK_ENABLE();
+        return;
+    }
+#endif
+#ifdef TIM8
+    if (tim == TIM8) {
+        __HAL_RCC_TIM8_CLK_ENABLE();
+        return;
+    }
+#endif
 }
