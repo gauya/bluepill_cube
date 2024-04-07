@@ -137,3 +137,30 @@ int HUL_ADC_DMA_nvic(ADC_TypeDef *adc, int enable) {
 #endif
 
 }
+
+void HUL_TIM_clk_enable(TIM_TypeDef *tim) {
+#ifdef TIM1
+    if (tim == TIM1) {
+        __HAL_RCC_TIM1_CLK_ENABLE();
+        return;
+    }
+#endif
+#ifdef TIM2
+    if (tim == TIM2) {
+        __HAL_RCC_TIM2_CLK_ENABLE();
+        return;
+    }
+#endif
+#ifdef TIM3
+    if (tim == TIM3) {
+        __HAL_RCC_TIM3_CLK_ENABLE();
+        return;
+    }
+#endif
+#ifdef TIM4
+    if (tim == TIM4) {
+        __HAL_RCC_TIM4_CLK_ENABLE();
+        return;
+    }
+#endif
+}
