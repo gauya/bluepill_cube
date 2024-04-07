@@ -66,7 +66,7 @@ void exti_handler(uint16_t GPIO_Pin) {
     if(__HAL_GPIO_EXTI_GET_IT(GPIO_Pin) != RESET) { // (EXTI->PR & (__EXTI_LINE__)
         uint16_t fl = EXTI->PR & (GPIO_Pin);
 
-        // use may be gwgpio
+        // use by gwgpio
         if( _exti_callback ) {
             _exti_callback( fl ); 
         }        
@@ -345,7 +345,8 @@ void ggpio::toggle() {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-
+// all pins have same properties
+// However, processing can be done separately on any of the masked pins.
 gwgpio::gwgpio(GPIO_TypeDef *g,uint16_t mask,uint32_t mode, int pullup, int speed) {
     this->port = g;
     this->mask = mask;
@@ -360,7 +361,7 @@ gwgpio::gwgpio(GPIO_TypeDef *g,uint16_t mask,uint32_t mode, int pullup, int spee
 
 gwgpio::gwgpio(gwgpio_t *g,uint32_t mode, int pullup, int speed) {
     this->port = g->port;
-    this->mask = mask;
+    this->mask = g->mask;
 
     _flag = 0;
     _mode = mode;
@@ -401,9 +402,6 @@ void gwgpio::init(GPIO_TypeDef *g,uint16_t mask,uint32_t mode, int pullup, int s
 }
 
 void gwgpio::init() {
-    GPIO_InitTypeDef gi;
-
-
     if( IS_GPIO_ALL_INSTANCE(this->port)) {
         HUL_GPIO_clk_enable(this->port);
     } else {
@@ -452,6 +450,7 @@ void gwgpio::init() {
         }
     }
 
+    GPIO_InitTypeDef gi;
     gi.Pin = this->mask;
     gi.Mode = mode;
     gi.Speed = _speed;
@@ -480,6 +479,7 @@ int gwgpio::read() {
 int gwgpio::write(uint16_t val) {
     if( ! isinit() || (this->_mode != eGPIO_OUTPP && this->_mode != eGPIO_OUTOD) ) return -1;
     
+    this->port->BRR = ( ~val & this->mask );
     this->port->BSRR = ( val & this->mask );
     
     return (val & this->mask);

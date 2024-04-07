@@ -113,11 +113,12 @@ void test6() {
 
 
 void rtled() {
+  static ggpio gled(GPIOC,13);
   static int f=0;
   f++;
   if(f > 200) {
     f=0;
-  //  gled.toggle();
+    gled.toggle();
   }
 }
 
@@ -149,15 +150,18 @@ void etfunc(uint16_t pin)
   }
 }
 
+void spi1_master_init();
 void setup() {
   init_serial(115200);
 
-  init_ticks(eTICK_VOL_100us);
+  init_ticks(eTICK_VOL_10us); // eTICK_VOL_100us
   init_proc();
 
 // ---------------------------------------------------------
   log_level(2);
   
+  spi1_master_init();
+
   error_log("start");
 
   gt = new gtimer(TIM2,625,127,timer_func);

@@ -119,14 +119,13 @@ public:
 	void toggle(int pin);
 	
 	int write(int pin, int val);
-
+	
 	void high();
 	void low();
 	void toggle();	
 
 // write 
 	int write(uint16_t data);
-	int write(uint32_t mask, uint16_t data);
 
 	void attach( void (*extif)(uint16_t));
 	void detach();

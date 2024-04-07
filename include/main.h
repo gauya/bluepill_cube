@@ -5,7 +5,9 @@
 extern "C" {
 #endif
 
+#include "stm32f1xx.h"
 #include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_conf.h"
 
 void SystemClock_Config(void);
 void Error_Handler();

@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#define RTPROC_PER_MSEC	0
+
 static uint32_t __usec_per_tick;
 static uint32_t __usec_max;
 static double __ticks_per_usec;
@@ -68,6 +70,8 @@ void SysTick_Handler(void)
 
 // Adjusted to process once per msec regardless of clock
 	__disable_irq();
+
+#if (RTPROC_PER_MSEC == 1) 
 	switch(__tick_vol) {
 	case eTICK_VOL_1ms:
 		run_rtproc_all();
@@ -86,6 +90,10 @@ void SysTick_Handler(void)
 		}
 		break;
 	}
+#else
+	run_rtproc_all();
+#endif
+
 	__enable_irq();
 #endif	  
 }
