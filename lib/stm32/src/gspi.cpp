@@ -1,16 +1,45 @@
 #include "gspi.h"
 #include "ggpio.h"
+#include "ghul.h"
+#include "glog.h"
 
 SPI_HandleTypeDef __hspi1, __hspi2, __hspi3;
+
+int spi_speed_idx[] = {
+    SPI_BAUDRATEPRESCALER_2,SPI_BAUDRATEPRESCALER_4,SPI_BAUDRATEPRESCALER_8,SPI_BAUDRATEPRESCALER_16,
+    SPI_BAUDRATEPRESCALER_32,SPI_BAUDRATEPRESCALER_64,SPI_BAUDRATEPRESCALER_128,SPI_BAUDRATEPRESCALER_256
+};
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
   // 전송 완료 처리
+  if( hspi->Instance == SPI1 ) {
+
+  }
+#if defined(SPI2)  
+  else if( hspi->Instance == SPI2 ) {
+  }
+#endif
+#if defined(SPI3)  
+  else if( hspi->Instance == SPI3 ) {
+  }
+#endif
 }
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
   // 수신 완료 처리
+  if( hspi->Instance == SPI1 ) {
+
+  }
+#if defined(SPI2)  
+  else if( hspi->Instance == SPI2 ) {
+  }
+#endif
+#if defined(SPI3)  
+  else if( hspi->Instance == SPI3 ) {
+  }
+#endif  
 }
 
 #if 0
@@ -73,8 +102,8 @@ void spi1_master_init() {
     gpio_t gs1sck={GPIOB,3}, gs1miso={GPIOB,4}, gs1mosi={GPIOB,5};
 
     ggpio s1sck( &gs1sck, eGPIO_AFPP, 0, 3),
-    s1mosi( &gs1mosi, eGPIO_AFPP, 0, 3),
-    s1miso( &gs1miso, eGPIO_INPUT, 0, 3);
+      s1mosi( &gs1mosi, eGPIO_AFPP, 0, 3),
+      s1miso( &gs1miso, eGPIO_INPUT, 0, 3);
 
     __HAL_AFIO_REMAP_SPI1_ENABLE();
 
@@ -83,13 +112,13 @@ void spi1_master_init() {
     HAL_NVIC_EnableIRQ(SPI1_IRQn);
 
   __hspi1.Instance = SPI1;
-  __hspi1.Init.Mode = SPI_MODE_MASTER;
-  __hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  __hspi1.Init.Mode = SPI_MODE_MASTER; // SPI_MODE_SLAVE
+  __hspi1.Init.Direction = SPI_DIRECTION_2LINES; //
   __hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   __hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   __hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   __hspi1.Init.NSS = SPI_NSS_SOFT;
-  __hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  __hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8; 
   __hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   __hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   __hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -152,6 +181,82 @@ HAL_SPI_Receive_IT(&__hspi2, rx2_data, sizeof(rx2_data));
   }    
 }
 
-void prepare_spi() {
-    HAL_SPI_Receive_IT(&__hspi2, rx2_data, sizeof(rx2_data));    
+int gspi::init(SPI_TypeDef *spi, uint16_t mode, gpio_t gsck, gpio_t gmiso, gpio_t gmosi,uint32_t bufsize, int speed)
+{
+  if( _rxbuf ) {
+    delete[] _rxbuf;
+  }
+  if( bufsize == 0 || bufsize > MAX_SPIRXBUFSIZE) {
+    error_log("spi rxbuf size wrong");
+  }
+  _rxbuf = new uint8_t[bufsize];
+   
+  if( HUL_SPI_clk_enable(spi) == 0 ) {
+    error_log("spi is wrong");
+    return -1;
+  }
+
+  if( speed < 0 || speed > 7 ) speed = 2;
+
+  _sck.init(&gsck,eGPIO_AFPP, 0, 3);
+  _mosi.init(&gmosi,eGPIO_AFPP, 0, 3);
+  _miso.init(&gmiso,eGPIO_INPUT, 0, 3);
+  _mode = mode;
+
+  //__HAL_AFIO_REMAP_SPI1_ENABLE();
+
+  HUL_SPI_nvic(spi,1);
+
+  _hs->Instance = spi;
+  _hs->Init.Mode = (_master)? SPI_MODE_MASTER : SPI_MODE_SLAVE;
+  _hs->Init.Direction = (_lines==eSPI_Duplex)? SPI_DIRECTION_2LINES : 
+      (_lines==eSPI_1line)? SPI_DIRECTION_1LINE : SPI_DIRECTION_2LINES_RXONLY;
+  _hs->Init.DataSize = SPI_DATASIZE_8BIT;
+  _hs->Init.CLKPolarity = SPI_POLARITY_LOW;
+  _hs->Init.CLKPhase = SPI_PHASE_1EDGE;
+  _hs->Init.NSS = SPI_NSS_SOFT;
+  _hs->Init.BaudRatePrescaler = ((speed) << 3U); //SPI_BAUDRATEPRESCALER_8 2,4,8,16,32,64,128,256
+  _hs->Init.FirstBit = SPI_FIRSTBIT_MSB;
+  _hs->Init.TIMode = SPI_TIMODE_DISABLE;
+  _hs->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  _hs->Init.CRCPolynomial = 10;
+
+  if (HAL_SPI_Init(&__hspi1) != HAL_OK) {
+    error_log("spi init fail");
+    return -1;
+  }    
+
+  _hs = &__hspi1;
+
+  return 0;
+}
+
+gspi::gspi(SPI_TypeDef *spi, uint16_t mode, gpio_t gsck, gpio_t gmiso, gpio_t gmosi, uint32_t bufsize, int speed)
+{
+  _rxbuf = 0;
+  _mode = 0;
+  _hs = 0;
+
+  init(spi,mode,gsck,gmiso,gmosi,bufsize,speed);
+}
+
+gspi::gspi() {
+  _rxbuf = 0;
+  _mode = 0;
+  _hs = 0;
+}
+
+gspi::~gspi() {
+  if(_rxbuf) {
+    delete[] _rxbuf;
+    _rxbuf = 0;
+  }
+}
+
+int gspi::start() {
+  if( !_hs ) return -1;
+
+  HAL_SPI_Receive_IT(&__hspi2, _rxbuf, _bufsize);    
+  
+  return 0;
 }

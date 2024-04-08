@@ -162,6 +162,10 @@ void ggpio::init(GPIO_TypeDef *g, int pin, uint32_t mode, int pullup, int speed)
     init();
 }
 
+void ggpio::init(gpio_t *g, uint32_t mode, int pullup, int speed) {
+    init(g->port,g->pin, mode,pullup,speed);
+}
+
 void ggpio::init() {
     if( _inited ) 
         return;

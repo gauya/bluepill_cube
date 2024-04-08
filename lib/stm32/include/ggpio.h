@@ -43,7 +43,6 @@ class ggpio : public gpio_t {
 		};
 	};
 	uint16_t 	_mask;
-
 protected:
 
 public:
@@ -53,6 +52,7 @@ public:
 	virtual ~ggpio();
 
 	void init(GPIO_TypeDef *g,int pin,uint32_t mode = eGPIO_OUTPP, int pullup = 1, int speed = 2);
+	void init(gpio_t *g,uint32_t mode = eGPIO_OUTPP, int pullup = 1, int speed = 2);
 	void init();
 	inline bool isinit() { return (_inited) ? true : false;}
 	int pins_nr();
