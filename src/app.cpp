@@ -6,6 +6,7 @@
 #include <gtimer.h>
 #include "gflash.h"
 #include "gpwr.h"
+#include "gspi.h"
 
 void loop_led() {
   static ggpio gled(GPIOC,13); 
@@ -150,7 +151,8 @@ void etfunc(uint16_t pin)
   }
 }
 
-void spi1_master_init();
+gspi _spi1;
+
 void setup() {
   init_serial(115200);
 
@@ -160,8 +162,6 @@ void setup() {
 // ---------------------------------------------------------
   log_level(2);
   
-  spi1_master_init();
-
   error_log("start");
 
   gt = new gtimer(TIM2,625,127,timer_func);

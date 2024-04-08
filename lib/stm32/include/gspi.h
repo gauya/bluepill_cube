@@ -21,7 +21,7 @@ class gspi {
     SPI_HandleTypeDef *_hs;
 
     uint8_t *_rxbuf;
-    uint32_t _bufsize;
+    uint32_t _bufsize, _datalen;
 public:
 // constructor
     gspi(SPI_TypeDef *spi, uint16_t mode, gpio_t gclk, gpio_t gmiso, gpio_t gmosi, uint32_t bufsize, int speed=-1);
@@ -34,8 +34,8 @@ public:
 
     int start();
 
-    int read();
-    int write();
+    int read(uint8_t *buf, uint32_t bsize);
+    int write(uint8_t *data, uint32_t len);
 
 };
 

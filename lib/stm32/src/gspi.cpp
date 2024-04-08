@@ -2,6 +2,7 @@
 #include "ggpio.h"
 #include "ghul.h"
 #include "glog.h"
+#include <string.h>
 
 SPI_HandleTypeDef __hspi1, __hspi2, __hspi3;
 
@@ -72,6 +73,7 @@ void SPI2_IRQHandler(void)
 }
 #endif
 
+#ifdef SPI_TEST
 uint8_t rx1_data[64];
 
 void spi1_master_init() {
@@ -180,6 +182,7 @@ HAL_SPI_Receive_IT(&__hspi2, rx2_data, sizeof(rx2_data));
     Error_Handler();
   }    
 }
+#endif // SPI_TEST
 
 int gspi::init(SPI_TypeDef *spi, uint16_t mode, gpio_t gsck, gpio_t gmiso, gpio_t gmosi,uint32_t bufsize, int speed)
 {
@@ -233,6 +236,7 @@ int gspi::init(SPI_TypeDef *spi, uint16_t mode, gpio_t gsck, gpio_t gmiso, gpio_
 
 gspi::gspi(SPI_TypeDef *spi, uint16_t mode, gpio_t gsck, gpio_t gmiso, gpio_t gmosi, uint32_t bufsize, int speed)
 {
+  _datalen = 0;
   _rxbuf = 0;
   _mode = 0;
   _hs = 0;
@@ -241,6 +245,7 @@ gspi::gspi(SPI_TypeDef *spi, uint16_t mode, gpio_t gsck, gpio_t gmiso, gpio_t gm
 }
 
 gspi::gspi() {
+  _datalen = 0;
   _rxbuf = 0;
   _mode = 0;
   _hs = 0;
@@ -250,6 +255,7 @@ gspi::~gspi() {
   if(_rxbuf) {
     delete[] _rxbuf;
     _rxbuf = 0;
+    _datalen = 0;
   }
 }
 
@@ -259,4 +265,30 @@ int gspi::start() {
   HAL_SPI_Receive_IT(&__hspi2, _rxbuf, _bufsize);    
   
   return 0;
+}
+
+int gspi::read(uint8_t *buf, uint32_t bsize) {
+  if( !_hs || _datalen == 0 ) return -1;
+
+  uint32_t ln=0;
+  if( _datalen > bsize ) {
+    memcpy( _rxbuf, buf, bsize );
+    _datalen -= bsize;
+    ln = bsize;
+    memcpy( _rxbuf+bsize, _rxbuf, _datalen);
+  } else {
+    memcpy( _rxbuf, buf, _datalen );
+    ln = _datalen;
+    _datalen = 0;
+  }
+
+  return ln;
+}
+
+int gspi::write(uint8_t *data, uint32_t len) {
+  if(HAL_SPI_Transmit(_hs, data, len, 100) != HAL_OK) {
+    return -1;
+  };
+  
+  return len;
 }
