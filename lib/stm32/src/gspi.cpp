@@ -11,12 +11,15 @@ int spi_speed_idx[] = {
     SPI_BAUDRATEPRESCALER_32,SPI_BAUDRATEPRESCALER_64,SPI_BAUDRATEPRESCALER_128,SPI_BAUDRATEPRESCALER_256
 };
 
+int spi_tx_cnt=0, spi_rx_cnt=0;
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-  // 전송 완료 처리
+  spi_tx_cnt++;
+#if defined(SPI1) 
   if( hspi->Instance == SPI1 ) {
 
   }
+#endif
 #if defined(SPI2)  
   else if( hspi->Instance == SPI2 ) {
   }
@@ -29,10 +32,12 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-  // 수신 완료 처리
+  spi_rx_cnt++;
+#if defined(SPI1) 
   if( hspi->Instance == SPI1 ) {
 
   }
+#endif
 #if defined(SPI2)  
   else if( hspi->Instance == SPI2 ) {
   }
@@ -267,6 +272,14 @@ int gspi::start() {
   return 0;
 }
 
+int gspi::read() {
+  uint8_t ch;
+  if (HAL_SPI_Receive(_hs, &ch, 1, HAL_MAX_DELAY) == HAL_OK) {
+    return ch;
+  }
+  return -1;
+}
+
 int gspi::read(uint8_t *buf, uint32_t bsize) {
   if( !_hs || _datalen == 0 ) return -1;
 
@@ -289,6 +302,6 @@ int gspi::write(uint8_t *data, uint32_t len) {
   if(HAL_SPI_Transmit(_hs, data, len, 100) != HAL_OK) {
     return -1;
   };
-  
+
   return len;
 }

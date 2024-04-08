@@ -35,6 +35,7 @@ public:
     int start();
 
     int read(uint8_t *buf, uint32_t bsize);
+    int read();
     int write(uint8_t *data, uint32_t len);
 
 };

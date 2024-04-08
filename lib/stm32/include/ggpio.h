@@ -19,6 +19,9 @@ typedef struct {
 
 typedef enum { eGPIO_OUTPP=0, eOUTPP = eGPIO_OUTPP, eGPIO_OUTOD, eOUTOD= eGPIO_OUTOD, eGPIO_AFPP, eGPIO_INPUT, eINPUT= eGPIO_INPUT, eGPIO_ADC, eADC= eGPIO_ADC, eGPIO_EXTI_RISING, eGPIO_EXTI_FALLING, eGPIO_EXTI_RISING_FALLING } egpio_type;
 
+int set_gpiouse(GPIO_TypeDef *g, uint16_t pin); // pin is mask
+int is_gpiouse(GPIO_TypeDef *g, uint16_t pin); // pin is mask
+
 #ifdef __cplusplus
 extern "C" {
 #endif

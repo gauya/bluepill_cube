@@ -178,7 +178,7 @@ void setup() {
 
   //pendmain();
 
-  et.init(GPIOB,5,eGPIO_EXTI_RISING_FALLING); //eGPIO_EXTI_FALLING); //eGPIO_EXTI_RISING_FALLING);
+  et.init(GPIOB,2,eGPIO_EXTI_RISING_FALLING); //eGPIO_EXTI_FALLING); //eGPIO_EXTI_RISING_FALLING);
   et.attach(etfunc,0);
 
 #if ADC_TEST

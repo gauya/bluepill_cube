@@ -3,6 +3,23 @@
 #include <ghul.h>
 #include <stm32f1xx_hal_exti.h>
 
+uint16_t __gpio_used_map[15] = { 0, };
+
+int set_gpiouse(GPIO_TypeDef *g, uint16_t pin) {
+    int i=(g - GPIOA)/(GPIOB-GPIOA);
+    int r = (__gpio_used_map[i] & pin);
+    if( r ) { // already set
+        return -1;
+    }
+    __gpio_used_map[i] |= pin;
+    return 0;
+}
+
+int is_gpiouse(GPIO_TypeDef *g, uint16_t pin) {
+    int i=(g - GPIOA)/(GPIOB-GPIOA);
+    return (__gpio_used_map[i] & pin);
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
