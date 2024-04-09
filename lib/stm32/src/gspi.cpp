@@ -4,20 +4,43 @@
 #include "glog.h"
 #include <string.h>
 
-SPI_HandleTypeDef __hspi1, __hspi2, __hspi3;
+#define MAX_SPI_NUM 3
+
+SPI_HandleTypeDef __hspi[MAX_SPI_NUM];
+gspi __gspi[MAX_SPI_NUM];
 
 int spi_speed_idx[] = {
     SPI_BAUDRATEPRESCALER_2,SPI_BAUDRATEPRESCALER_4,SPI_BAUDRATEPRESCALER_8,SPI_BAUDRATEPRESCALER_16,
     SPI_BAUDRATEPRESCALER_32,SPI_BAUDRATEPRESCALER_64,SPI_BAUDRATEPRESCALER_128,SPI_BAUDRATEPRESCALER_256
 };
 
+void gspi_rxcallback(SPI_HandleTypeDef *hspi) {
+  gspi *s;
+  //s = &__gspi[(hspi->Instance - SPI1) / (SPI2-SPI1)];
+  int idx = HUL_SPI_idx(hspi->Instance);
+  if( idx == -1 ) {
+    return;
+  }
+  s = &__gspi[idx];
+  
+  // save data
+
+  // 
+  if(s->_dmaint == eSPI_Interrupt) {
+    HAL_SPI_Receive_IT(s->_hs, s->_rxbuf, s->_bufsize);    
+  } else
+  if(s->_dmaint == eSPI_Dma) {
+    HAL_SPI_Receive_DMA(s->_hs, s->_rxbuf, s->_bufsize);
+  }
+}
+
 int spi_tx_cnt=0, spi_rx_cnt=0;
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 {
   spi_tx_cnt++;
+
 #if defined(SPI1) 
   if( hspi->Instance == SPI1 ) {
-
   }
 #endif
 #if defined(SPI2)  
@@ -33,6 +56,10 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
   spi_rx_cnt++;
+
+  gspi_rxcallback(hspi);
+
+
 #if defined(SPI1) 
   if( hspi->Instance == SPI1 ) {
 
@@ -66,13 +93,19 @@ extern "C" {
 
 void SPI1_IRQHandler(void)
 {
-
 }
 
+#if defined(SPI2)  
 void SPI2_IRQHandler(void)
 {
-
 }
+#endif
+
+#if defined(SPI3)  
+void SPI3_IRQHandler(void)
+{
+}
+#endif
 
 #ifdef __cplusplus
 }
@@ -114,6 +147,38 @@ void spi1_master_init() {
 
     __HAL_AFIO_REMAP_SPI1_ENABLE();
 
+    /* SPI1 DMA Init */
+    /* SPI1_RX Init */
+    hdma_spi1_rx.Instance = DMA1_Channel2;
+    hdma_spi1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_spi1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_spi1_rx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_spi1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_spi1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_spi1_rx.Init.Mode = DMA_CIRCULAR;
+    hdma_spi1_rx.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&hdma_spi1_rx) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    __HAL_LINKDMA(hspi,hdmarx,hdma_spi1_rx);
+
+    /* SPI1_TX Init */
+    hdma_spi1_tx.Instance = DMA1_Channel3;
+    hdma_spi1_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    hdma_spi1_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_spi1_tx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_spi1_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_spi1_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_spi1_tx.Init.Mode = DMA_NORMAL;
+    hdma_spi1_tx.Init.Priority = DMA_PRIORITY_LOW;
+    if (HAL_DMA_Init(&hdma_spi1_tx) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    __HAL_LINKDMA(hspi,hdmatx,hdma_spi1_tx);
     /* SPI1 interrupt Init */
     HAL_NVIC_SetPriority(SPI1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(SPI1_IRQn);
@@ -197,9 +262,9 @@ int gspi::init(SPI_TypeDef *spi, uint16_t mode, gpio_t gsck, gpio_t gmiso, gpio_
   if( bufsize == 0 || bufsize > MAX_SPIRXBUFSIZE) {
     error_log("spi rxbuf size wrong");
   }
-  _rxbuf = new uint8_t[bufsize];
    
-  if( HUL_SPI_clk_enable(spi) == 0 ) {
+  int idx;
+  if( (idx=HUL_SPI_clk_enable(spi,_remap)) == -1 ) {
     error_log("spi is wrong");
     return -1;
   }
@@ -209,14 +274,22 @@ int gspi::init(SPI_TypeDef *spi, uint16_t mode, gpio_t gsck, gpio_t gmiso, gpio_
   _sck.init(&gsck,eGPIO_AFPP, 0, 3);
   _mosi.init(&gmosi,eGPIO_AFPP, 0, 3);
   _miso.init(&gmiso,eGPIO_INPUT, 0, 3);
+  
   _mode = mode;
 
-  //__HAL_AFIO_REMAP_SPI1_ENABLE();
+  if( _dmaint != eSPI_Poll ) {
+    if( !(_rxbuf = new uint8_t[bufsize])) {
+        return -1;
+    }
+    if(HUL_SPI_nvic(spi,1) == -1) {
+      return -1;
+    };
+  }
 
-  HUL_SPI_nvic(spi,1);
+  _hs = &__hspi[idx];
 
   _hs->Instance = spi;
-  _hs->Init.Mode = (_master)? SPI_MODE_MASTER : SPI_MODE_SLAVE;
+  _hs->Init.Mode = (_ms == eSPI_Master)? SPI_MODE_MASTER : SPI_MODE_SLAVE;
   _hs->Init.Direction = (_lines==eSPI_Duplex)? SPI_DIRECTION_2LINES : 
       (_lines==eSPI_1line)? SPI_DIRECTION_1LINE : SPI_DIRECTION_2LINES_RXONLY;
   _hs->Init.DataSize = SPI_DATASIZE_8BIT;
@@ -229,12 +302,12 @@ int gspi::init(SPI_TypeDef *spi, uint16_t mode, gpio_t gsck, gpio_t gmiso, gpio_
   _hs->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   _hs->Init.CRCPolynomial = 10;
 
-  if (HAL_SPI_Init(&__hspi1) != HAL_OK) {
+  if (HAL_SPI_Init(_hs) != HAL_OK) {
     error_log("spi init fail");
     return -1;
   }    
 
-  _hs = &__hspi1;
+  _inited = 1;
 
   return 0;
 }
@@ -252,7 +325,7 @@ gspi::gspi(SPI_TypeDef *spi, uint16_t mode, gpio_t gsck, gpio_t gmiso, gpio_t gm
 gspi::gspi() {
   _datalen = 0;
   _rxbuf = 0;
-  _mode = 0;
+  _mode = 8; // Intr, master, duplex mode
   _hs = 0;
 }
 
@@ -267,8 +340,13 @@ gspi::~gspi() {
 int gspi::start() {
   if( !_hs ) return -1;
 
-  HAL_SPI_Receive_IT(&__hspi2, _rxbuf, _bufsize);    
-  
+  if(_dmaint == 1) {
+    HAL_SPI_Receive_IT(_hs, _rxbuf, _bufsize);    
+  } else
+  if(_dmaint == 2) {
+    HAL_SPI_Receive_DMA(_hs, _rxbuf, _bufsize);
+  }
+
   return 0;
 }
 
@@ -281,7 +359,7 @@ int gspi::read() {
 }
 
 int gspi::read(uint8_t *buf, uint32_t bsize) {
-  if( !_hs || _datalen == 0 ) return -1;
+  if( !_inited || _datalen == 0 ) return -1;
 
   uint32_t ln=0;
   if( _datalen > bsize ) {
@@ -299,9 +377,27 @@ int gspi::read(uint8_t *buf, uint32_t bsize) {
 }
 
 int gspi::write(uint8_t *data, uint32_t len) {
-  if(HAL_SPI_Transmit(_hs, data, len, 100) != HAL_OK) {
-    return -1;
-  };
+  if( !_inited || len == 0 ) return -1;
+  
+  switch(_dmaint) {
+    case eSPI_Poll:
+      if(HAL_SPI_Transmit(_hs, data, len, 100) != HAL_OK) {
+        return -1;
+      };
+      break;
+    case eSPI_Interrupt:
+      if(HAL_SPI_Transmit_IT(_hs,data,len) != HAL_OK) {
+        return -1;
+      }
+      break;
+    case eSPI_Dma:
+      if(HAL_SPI_Transmit_DMA(_hs,data,len) != HAL_OK) {
+        return -1;
+      }
+      break;
+    default:
+      return -1;
+  }
 
   return len;
 }

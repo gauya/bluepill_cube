@@ -21,6 +21,7 @@ int HUL_ADC_DMA_nvic(ADC_TypeDef *adc, int enable);
 int HUL_TIM_clk_enable(TIM_TypeDef *tim);
 int HUL_SPI_clk_enable(SPI_TypeDef *spi, int remap=0);
 int HUL_SPI_nvic(SPI_TypeDef *spi, int enable);
+int HUL_SPI_idx(SPI_TypeDef *spi);
 
 #ifdef __cplusplus 
 }

@@ -153,6 +153,11 @@ void etfunc(uint16_t pin)
 
 gspi _spi1;
 
+#include "gqueue.h"
+//gqueue<uint32_t> aq(100);
+//gqueue<uint32_t> aq;
+gqueue<uint32_t> aq();
+
 void setup() {
   init_serial(115200);
 

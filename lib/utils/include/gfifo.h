@@ -93,6 +93,7 @@ int fifo_gets(gfifo_t* f,char *buf, uint16_t len);
 
 #ifdef __cplusplus
 
+
 class gfifo : public gfifo_t {
 private:
 	int push(int ch);

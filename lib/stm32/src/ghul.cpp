@@ -121,6 +121,34 @@ int HUL_SPI_clk_enable(SPI_TypeDef *spi, int remap)
   return -1;
 }
 
+int HUL_SPI_idx(SPI_TypeDef *spi)
+{
+  if( ! IS_SPI_ALL_INSTANCE(spi) ) 
+    return -1;
+
+#if defined(SPI1)
+  if( spi == SPI1 ) 
+    return 0;
+#endif
+#if defined(SPI2)
+  if( spi == SPI2 ) 
+    return 1;
+#endif
+#if defined(SPI3)
+  if( spi == SPI3 ) 
+    return 2;
+#endif
+#if defined(SPI4)
+  if( spi == SPI4 ) 
+    return 3;
+#endif
+#if defined(SPI5)
+  if( spi == SPI5 ) 
+    return 4;
+#endif
+  return -1;
+}
+
 int HUL_ADC_nvic(ADC_TypeDef *adc, int enable) {
 #ifdef STM32F1 // F1  
   if( ADC1 == adc ) {
