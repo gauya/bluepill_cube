@@ -50,7 +50,7 @@ void test2() {
   gdebug(2,"test2 cnt = %d : elapsed %ld sec %d.%d.%d.%d]\n",c++, t,d, h,m,s);
 }
 
-gcavg avg();  // <-----------
+gav avg();  // <-----------
 
 #define ADC_TEST  0
 

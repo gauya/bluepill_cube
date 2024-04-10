@@ -86,7 +86,11 @@ int add_rtpfn(int t, void (*rtpfn)()) {
 	grtpfn_t *r = (grtpfn_t *)malloc(sizeof(grtpfn_t));
 	if( !r ) return -1;
 
+#if ( __RT_PROC__ < 1000 )
 	set_timed(&(r->tmd), t);
+#else
+	set_utimed(&(r->tmd), t);
+#endif
 	r->rtpfn = rtpfn;
 	__rtp.list[__rtp.rtpfns] = r;
 	__rtp.rtpfns++;
@@ -98,7 +102,11 @@ void run_rtproc(uint16_t i) {
 
 	grtpfn_t *r = __rtp.list[i];
 
+#if ( __RT_PROC__ < 1000 )
 	if( r && is_timed(&(r->tmd)) ) {
+#else
+	if( r && is_utimed(&(r->tmd)) ) {
+#endif
 		r->rtpfn();
 	}
 }
