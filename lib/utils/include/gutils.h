@@ -160,6 +160,18 @@ public:
 	inline operator T() const { return get(); }
 };
 
+template<typename T, typename N>
+T gtg<T,N>::put( T val ) {
+    v = ( (v * n) + val) / (n + 1);
+    if( n < cb ) n++;
+}
+
+template<typename T,typename N>
+void gtg<T,N>::width( N b ) {
+	cb = b;
+	if( cb < n ) n = cb;
+}
+
 typedef gtg<double,uint8_t> gcavg;
 typedef gtg<double,uint32_t> glavg;
 
