@@ -184,6 +184,60 @@ int gqueue<II>::pop(II *ii)
     return re;
 }
 
+
+template<typename II>
+int gqueue<II>::operator << (II item) 
+{
+    if( !isvalid() ) {
+        return -1;
+    }
+
+    lock();
+
+    int re = 0;
+
+	if( isfull() ) {
+		this->_overflow = 1;
+    
+		if( this->_discard == eQUEUE_DC_OLD ) {
+            this->_buf[this->_cp] = item;
+            if( ++this->_cp >= this->_num ) this->_cp = 0;
+            if( ++this->_np >= this->_num ) this->_np = 0; // discard old data
+            re = 1;
+        }
+        // eQUEUE_DC_WAIT not proc...
+	} else {
+		this->_buf[this->_cp] = item;
+		if( ++this->_cp >= this->_num ) this->_cp = 0;
+        re = 1;
+	}
+
+    unlock();
+   
+	return re;
+}
+
+template<typename II>
+int gqueue<II>::operator >> (II &ii) 
+{
+    if( !isvalid() ) {
+        return -1;
+    }
+
+    int re = 0;
+
+    lock();
+	if( ! isempty() ) {
+		ii = this->_buf[this->_np];
+		if( ++(this->_np) >= this->_num ) this->_np = 0;
+        this->_overflow = 0;
+        re = 1;
+	} 
+    unlock();
+
+    return re;
+}
+
 template<typename II>
 int gqueue<II>::write(const II *buf, uint32_t len) 
 {

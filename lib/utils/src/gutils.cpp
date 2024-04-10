@@ -88,23 +88,6 @@ double last_gavg(gavg_t *a) {
 }
 
 /// @brief 
-/// @tparam T 
-/// @tparam N 
-/// @param val 
-/// @return 
-template<typename T, typename N>
-T gtg<T,N>::put( T val ) {
-    v = ( (v * n) + val) / (n + 1);
-    if( n < cb ) n++;
-}
-
-template<typename T,typename N>
-void gtg<T,N>::width( N b ) {
-	cb = b;
-	if( cb < n ) n = cb;
-}
-
-/// @brief 
 /// @param no 
 /// @param cs 
 gam::gam(int no=0, int *cs=0) {
