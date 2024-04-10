@@ -151,24 +151,9 @@ void etfunc(uint16_t pin)
   }
 }
 
-gspi _spi1;
-
-#include "gqueue.h"
-gqueue<uint32_t> aq(100);
-//gqueue<uint32_t> aq;
-//gqueue<uint32_t> aq();
-
-template <class Item, int size> class Stack {
-  public:
-      int operator << (Item item);  // push operator
-      int operator >> (Item& item); // pop operator
-      Stack() { top = 0; }          // constructor defined inline
-   private:
-      Item stack[size];             // stack of items
-      int   top;                    // index to top of stack
-};
-
-Stack<int,10> ss;
+//gspi _spi1;
+//#include "gqueue.h"
+//gqueue<uint32_t> aq(100);
 
 void setup() {
   init_serial(115200);

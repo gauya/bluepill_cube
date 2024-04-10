@@ -1,7 +1,7 @@
-//#ifndef __HGQUEUE_H
-//#define __HGQUEUE_H
+#ifndef __HGQUEUE_H
+#define __HGQUEUE_H
 
-//#ifdef __cplusplus
+#ifdef __cplusplus
 
 enum { eQUEUE_DC_NEW, eQUEUE_DC_OLD, eQUEUE_DC_WAIT };
 
@@ -64,6 +64,7 @@ public:
 
 	int push(II i);
 	int pop(II *i);
+	II pop();
 	int operator << (II i);
 	int operator >> (II&i);
 
@@ -79,6 +80,8 @@ public:
 	operator queue_s<II> *(); // dynamic_cast<Student *>(Person[i]);
 
 };
+
+gqueue<char> gqc;
 
 template<typename II>
 gqueue<II>::gqueue() 
@@ -263,6 +266,24 @@ int gqueue<II>::pop(II *ii)
     return re;
 }
 
+template<typename II>
+II gqueue<II>::pop() 
+{
+    II ii;
+    if( !isvalid() ) {
+        return (ii){0};
+    }
+
+    lock();
+	if( ! isempty() ) {
+		ii = this->_buf[this->_np];
+		if( ++(this->_np) >= this->_num ) this->_np = 0;
+        this->_overflow = 0;
+ 	} 
+    unlock();
+
+    return ii;
+}
 
 template<typename II>
 int gqueue<II>::operator << (II item) 
@@ -395,5 +416,5 @@ II* gqueue<II>::next() const
     return watch(1);
 }
 
-//#endif // __cplusplus
-//#endif // __HGQUEUE_H
+#endif // __cplusplus
+#endif // __HGQUEUE_H

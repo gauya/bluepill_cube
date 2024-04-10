@@ -140,7 +140,7 @@ struct gavg_tt{
 	N cb,n;
 	T v; 
 };
-typedef gavg_tt<double,uint32_t> gavgdu_t;
+//typedef gavg_tt<double,uint32_t> gavgdu_t;
 
 template<typename T, typename N>
 class gtg : public gavg_tt<T,N> {
@@ -172,8 +172,8 @@ void gtg<T,N>::width( N b ) {
 	if( cb < n ) n = cb;
 }
 
-typedef gtg<double,uint8_t> gcavg;
-typedef gtg<double,uint32_t> glavg;
+typedef gtg<double,uint16_t> gav;
+typedef gtg<double,uint32_t> gavl;
 
 class gam {
 private:
