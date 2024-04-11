@@ -9,7 +9,7 @@ enum { eSPI_Duplex=0,eSPI_1line=1, eSPI_Rxonly=2};
 enum { eSPI_Poll=0, eSPI_Interrupt, eSPI_Dma };
 
 #define DEF_SPIRXBUFSIZE 64
-#define MAX_SPIRXBUFSIZE (32*1024)
+#define MAX_SPIRXBUFSIZE (1024)
 class gspi {
     ggpio _sck, _mosi, _miso;
     union {

@@ -19,6 +19,7 @@ int HUL_GPIO_clk_enable(GPIO_TypeDef *gpio);
 int HUL_ADC_nvic(ADC_TypeDef *adc, int enable);
 int HUL_ADC_DMA_nvic(ADC_TypeDef *adc, int enable);
 int HUL_TIM_clk_enable(TIM_TypeDef *tim);
+int HUL_TIM_nvic(TIM_TypeDef *tim);
 int HUL_SPI_clk_enable(SPI_TypeDef *spi, int remap=0);
 int HUL_SPI_nvic(SPI_TypeDef *spi, int enable);
 int HUL_SPI_idx(SPI_TypeDef *spi);

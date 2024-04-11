@@ -92,9 +92,19 @@ gtimer::~gtimer() {
 void gtimer::set(TIM_TypeDef *tim, uint32_t ARR, uint32_t PSC, void (*f)(TIM_HandleTypeDef *)) {
     _mode = 0;
 
-    _ht = (tim == TIM1)? &htim1 : (tim == TIM2)? &htim2 : (tim == TIM3)? &htim3 : (tim == TIM4)? &htim4 : (TIM_HandleTypeDef *)0;
-    if (_ht == 0)
-        return;
+  _ht = (tim == TIM1)? &htim1 
+#ifdef TIM2
+    : (tim == TIM2) ? &htim2 
+#endif
+#ifdef TIM3 
+    : (tim == TIM3) ? &htim3
+#endif
+#ifdef TIM4 
+    : (tim == TIM4) ? &htim4 
+#endif
+    : 0;
+
+    if( !_ht ) return;
 
     _ht->Instance = tim;
     _ht->Init.Period = ARR;
@@ -115,22 +125,13 @@ void gtimer::set(TIM_TypeDef *tim, uint32_t ARR, uint32_t PSC, void (*f)(TIM_Han
     }
 
     HUL_TIM_clk_enable(_ht->Instance);
-#if 1
+
     if (f) {
         _int = 1;
-
         attach(f);
-
-        IRQn_Type irqn = (tim == TIM2) ? TIM2_IRQn : (tim == TIM3) ? TIM3_IRQn
-                                                 : (tim == TIM4)   ? TIM4_IRQn
-                                                                   : (IRQn_Type)0;
-
-        if (irqn) {
-            HAL_NVIC_SetPriority(irqn, 0, 0);
-            HAL_NVIC_EnableIRQ(irqn);
-        }
+        HUL_TIM_nvic(tim);
     }
-#endif
+
     _ht->State = HAL_TIM_STATE_READY;
     _inited = 1;
 }

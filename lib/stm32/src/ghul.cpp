@@ -254,3 +254,25 @@ int HUL_TIM_clk_enable(TIM_TypeDef *tim) {
 #endif
 return -1;
 }
+
+int HUL_TIM_nvic(TIM_TypeDef *tim) {
+  IRQn_Type irqn = (tim == TIM1)? TIM1_UP_IRQn 
+#ifdef TIM2
+    : (tim == TIM2) ? TIM2_IRQn 
+#endif
+#ifdef TIM3 
+    : (tim == TIM3) ? TIM3_IRQn
+#endif
+#ifdef TIM4 
+    : (tim == TIM4) ? TIM4_IRQn 
+#endif
+    : (IRQn_Type)0;
+
+  if (irqn) {
+      HAL_NVIC_SetPriority(irqn, 0, 0);
+      HAL_NVIC_EnableIRQ(irqn);
+
+      return 0;
+  }
+  return -1;
+}
