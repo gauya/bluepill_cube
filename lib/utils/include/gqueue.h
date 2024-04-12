@@ -70,8 +70,8 @@ public:
 
     // return NULL on error
     II* watch(int i) const;
-    II* prev() const;
-    II* next() const;
+    II* prev(int i=-1) const;
+    II* next(int i=-1) const;
 
     int write(const II *buf, uint32_t len);
 	int read(II *buf, uint32_t blen);
@@ -405,15 +405,35 @@ II* gqueue<II>::watch(int i) const
 }
 
 template<typename II>
-II* gqueue<II>::prev() const 
+II* gqueue<II>::prev(int i) const 
 {
-    return watch(-1);
+    if( i == -1 || _num == 0 )
+        return watch(-1);
+    if( i < 0 || i >= _num ) {
+        return (II*)0;
+    }
+    i++;
+    if( i >= _num ) {
+        i = 0;
+    }
+    
+    return _buf[i];
 }
 
 template<typename II>
-II* gqueue<II>::next() const 
+II* gqueue<II>::next(int i) const 
 {
-    return watch(1);
+    if( i == -1 || _num == 0 )
+        return watch(1);
+    if( i < 0 || i >= _num ) {
+        return (II*)0;
+    }
+    i--;
+    if( i < 0 ) {
+        i = _num - 1;
+    }
+
+    return _buf[i];
 }
 
 #endif // __cplusplus
